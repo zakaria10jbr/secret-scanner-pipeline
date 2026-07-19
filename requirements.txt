@@ -1,3 +1,9 @@
+# Git operations — walk commit history, extract diffs
 gitpython
+# HTTP calls — used for secret verification (e.g. calling AWS/GitHub APIs to check if a key is live)
 requests
+# Load environment variables (API keys, config) from a .env file, keeps secrets out of source code
 python-dotenv
+
+# Parse the secrets pattern library (patterns.yaml) into a Python dictionary
+pyyaml
