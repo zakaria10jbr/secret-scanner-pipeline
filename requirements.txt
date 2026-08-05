@@ -7,3 +7,6 @@ python-dotenv
 
 # Parse the secrets pattern library (patterns.yaml) into a Python dictionary
 pyyaml
+
+boto3
+
