@@ -1,0 +1,711 @@
+{
+  "generated_at": "2026-08-06T01:32:51.523072+00:00",
+  "total_findings": 62,
+  "findings": [
+    {
+      "finding": "github_token",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "github_token = \"ghp_aB3xK9mQ2vL8pN4zR7wJ6tY1cF5dH0b\"",
+      "verification_status": "dead",
+      "score": 30,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "finding": "High entropy string (entropy=5.07)",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "github_token = \"ghp_aB3xK9mQ2vL8pN4zR7wJ6tY1cF5dH0b\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "Stripe",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "stripe_key = \"sk_live_51H8xJ2eZvKYlo2C4nQm9pR3wS7tU1v\"",
+      "verification_status": "unverifiable",
+      "score": 50,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "stripe",
+        "immediate_actions": [
+          "1. Roll the exposed API key immediately from the Stripe Dashboard > Developers > API keys.",
+          "2. Review the Stripe Dashboard's request logs for unauthorized usage.",
+          "3. Update all services using the old key with the newly generated one."
+        ],
+        "rotation_guidance": "Roll the key from the Stripe Dashboard, which issues a replacement while keeping the old key valid briefly for a safe cutover.",
+        "docs_url": "https://docs.stripe.com/keys#roll-keys"
+      }
+    },
+    {
+      "finding": "Stripe API Key - 1",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "stripe_key = \"sk_live_51H8xJ2eZvKYlo2C4nQm9pR3wS7tU1v\"",
+      "verification_status": "unverifiable",
+      "score": 50,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "stripe",
+        "immediate_actions": [
+          "1. Roll the exposed API key immediately from the Stripe Dashboard > Developers > API keys.",
+          "2. Review the Stripe Dashboard's request logs for unauthorized usage.",
+          "3. Update all services using the old key with the newly generated one."
+        ],
+        "rotation_guidance": "Roll the key from the Stripe Dashboard, which issues a replacement while keeping the old key valid briefly for a safe cutover.",
+        "docs_url": "https://docs.stripe.com/keys#roll-keys"
+      }
+    },
+    {
+      "finding": "High entropy string (entropy=4.91)",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "stripe_key = \"sk_live_51H8xJ2eZvKYlo2C4nQm9pR3wS7tU1v\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "Password in URL",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "db_url = \"postgres://admin:P4ssw0rd123@dbserver01:5432/production\"",
+      "verification_status": "unverifiable",
+      "score": 45,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "generic",
+        "immediate_actions": [
+          "1. Treat the exposed value as compromised and revoke or invalidate it via its issuing system.",
+          "2. Review any available access/audit logs for unauthorized use since exposure.",
+          "3. Purge the value from git history and confirm it's no longer reachable."
+        ],
+        "rotation_guidance": "Regenerate the credential through its issuing system and update all consumers before revoking the old value.",
+        "docs_url": "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password"
+      }
+    },
+    {
+      "finding": "High entropy string (entropy=4.54)",
+      "commit": "d431b0ea",
+      "file": "my_config.py",
+      "line": "db_url = \"postgres://admin:P4ssw0rd123@dbserver01:5432/production\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "Slack",
+      "commit": "e2465fa3",
+      "file": "my_config.py",
+      "line": "slack_token = \"xoxb-fake-slack-token-1234567890\"",
+      "verification_status": "dead",
+      "score": 20,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "finding": "High entropy string (entropy=4.81)",
+      "commit": "550dad55",
+      "file": "my_config.py",
+      "line": "session_token = \"xK9mQ2vL8pN4zR7wJ3tY6cF1dH5b\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "c0ca0242",
+      "file": "my_config.py",
+      "line": "aws_key = \"AKIAJAA49FFSFRFN6ZZZ\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.81)",
+      "commit": "44a2ca40",
+      "file": "my_config.py",
+      "line": "session_token = \"xK9mQ2vL8pN4zR7wJ3tY6cF1dH5b\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "30e27693",
+      "file": "bad-vars.tf",
+      "line": "default = \"AKIAJAA49FFSFRFN6CCC\""
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "e6a736f1",
+      "file": ".travis.yml",
+      "line": "AKIAJAA49FFSFRFN6AAA"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "e6a736f1",
+      "file": "README.md",
+      "line": "AKIAJAA49FFSFRFN6BBB"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "d9c11bcc",
+      "file": "bad-vars.tf",
+      "line": "default = \"AKIAJAA49FFSFRFN6CCC\""
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "3f560ab7",
+      "file": "README.md",
+      "line": "AKIAJAA49FFSFRFN6BBB"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "1d697e4d",
+      "file": ".travis.yml",
+      "line": "AKIAJAA49FFSFRFN6AAA"
+    },
+    {
+      "finding": "Asymmetric Private Key",
+      "commit": "1fd84a32",
+      "file": "BARE-SECRETS",
+      "line": "-----BEGIN PRIVATE KEY-----",
+      "verification_status": "unverifiable",
+      "score": 50,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "generic",
+        "immediate_actions": [
+          "1. Treat the exposed value as compromised and revoke or invalidate it via its issuing system.",
+          "2. Review any available access/audit logs for unauthorized use since exposure.",
+          "3. Purge the value from git history and confirm it's no longer reachable."
+        ],
+        "rotation_guidance": "Regenerate the credential through its issuing system and update all consumers before revoking the old value.",
+        "docs_url": "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password"
+      }
+    },
+    {
+      "finding": "Generic - 1701",
+      "commit": "1fd84a32",
+      "file": "BARE-SECRETS",
+      "line": "-----BEGIN PRIVATE KEY-----",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "Asymmetric Private Key",
+      "commit": "1f76bd36",
+      "file": "BARE-SECRETS",
+      "line": "-----BEGIN PRIVATE KEY-----",
+      "verification_status": "unverifiable",
+      "score": 50,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "generic",
+        "immediate_actions": [
+          "1. Treat the exposed value as compromised and revoke or invalidate it via its issuing system.",
+          "2. Review any available access/audit logs for unauthorized use since exposure.",
+          "3. Purge the value from git history and confirm it's no longer reachable."
+        ],
+        "rotation_guidance": "Regenerate the credential through its issuing system and update all consumers before revoking the old value.",
+        "docs_url": "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password"
+      }
+    },
+    {
+      "finding": "Generic - 1701",
+      "commit": "1f76bd36",
+      "file": "BARE-SECRETS",
+      "line": "-----BEGIN PRIVATE KEY-----",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "75cec78d",
+      "file": "BARE-SECRETS",
+      "line": "AKIAJAA49FFSFRFN6AAA"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "75cec78d",
+      "file": "mangled-secrets.pdf",
+      "line": "AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "75cec78d",
+      "file": "mangled-secrets.pdf",
+      "line": "='u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "81e133c2",
+      "file": "BARE-SECRETS",
+      "line": "AKIAJAA49FFSFRFN6AAA"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "81e133c2",
+      "file": "mangled-secrets.pdf",
+      "line": "AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "81e133c2",
+      "file": "mangled-secrets.pdf",
+      "line": "='u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "dcb2efc2",
+      "file": ".aws/credentials",
+      "line": "AWS_ACCESS_KEY_ID=\"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "dcb2efc2",
+      "file": ".aws/credentials",
+      "line": "AWS_SECRET_ACCESS_KEY=\"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "dcb2efc2",
+      "file": "bad-vars.tf",
+      "line": "default = \"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "dcb2efc2",
+      "file": "bad-vars.tf",
+      "line": "default = \"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "dcb2efc2",
+      "file": "bad.tfvars",
+      "line": "AWS_ACCESS_KEY_ID = \"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "dcb2efc2",
+      "file": "bad.tfvars",
+      "line": "AWS_SECRET_ACCESS_KEY = \"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "199c1588",
+      "file": "bad-vars.tf",
+      "line": "default = \"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "199c1588",
+      "file": "bad-vars.tf",
+      "line": "default = \"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "199c1588",
+      "file": "bad.tfvars",
+      "line": "AWS_ACCESS_KEY_ID = \"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "199c1588",
+      "file": "bad.tfvars",
+      "line": "AWS_SECRET_ACCESS_KEY = \"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "e596f029",
+      "file": ".aws/credentials",
+      "line": "AWS_ACCESS_KEY_ID=\"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "e596f029",
+      "file": ".aws/credentials",
+      "line": "AWS_SECRET_ACCESS_KEY=\"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "a6e9c36a",
+      "file": "README.md",
+      "line": "AWS_ACCESS_KEY_ID=\"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "a6e9c36a",
+      "file": "README.md",
+      "line": "AWS_SECRET_ACCESS_KEY=\"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    },
+    {
+      "finding": "AWS API Key",
+      "commit": "f2b6b5c3",
+      "file": "README.md",
+      "line": "AWS_ACCESS_KEY_ID=\"AKIAJAA49FFSFRFN6AAA\""
+    },
+    {
+      "finding": "High entropy string (entropy=4.24)",
+      "commit": "f2b6b5c3",
+      "file": "README.md",
+      "line": "AWS_SECRET_ACCESS_KEY=\"u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN\"",
+      "verification_status": "unverifiable",
+      "score": 30,
+      "severity": "Medium",
+      "action_taken": "logged_for_digest"
+    }
+  ],
+  "aws_pairs": [
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6ZZZ",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "c0ca0242",
+      "file": "my_config.py",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6CCC",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "30e27693",
+      "file": "bad-vars.tf",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "e6a736f1",
+      "file": ".travis.yml",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6BBB",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "e6a736f1",
+      "file": "README.md",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6CCC",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "d9c11bcc",
+      "file": "bad-vars.tf",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6BBB",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "3f560ab7",
+      "file": "README.md",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "1d697e4d",
+      "file": ".travis.yml",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "75cec78d",
+      "file": "BARE-SECRETS",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA\"",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "75cec78d",
+      "file": "mangled-secrets.pdf",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": null,
+      "status": "unverifiable",
+      "commit": "81e133c2",
+      "file": "BARE-SECRETS",
+      "finding": "AWS pair",
+      "score": 55,
+      "severity": "High",
+      "action_taken": "alert_and_advise",
+      "remediation": {
+        "category": "aws",
+        "immediate_actions": [
+          "1. Deactivate the exposed IAM access key immediately via the AWS Console or CLI (aws iam update-access-key --status Inactive).",
+          "2. Review CloudTrail logs for any activity performed with the exposed key since it was committed.",
+          "3. Delete the deactivated key once you've confirmed no legitimate workloads depend on it."
+        ],
+        "rotation_guidance": "Create a new access key pair, update all services/config to use it, then delete the old key via IAM.",
+        "docs_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
+      }
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA\"",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "81e133c2",
+      "file": "mangled-secrets.pdf",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "dcb2efc2",
+      "file": ".aws/credentials",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "dcb2efc2",
+      "file": "bad-vars.tf",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "dcb2efc2",
+      "file": "bad.tfvars",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "199c1588",
+      "file": "bad-vars.tf",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "199c1588",
+      "file": "bad.tfvars",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "e596f029",
+      "file": ".aws/credentials",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "a6e9c36a",
+      "file": "README.md",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    },
+    {
+      "access_key_id": "AKIAJAA49FFSFRFN6AAA",
+      "secret_key": "u9N1o8s+u3q4uwt9s8dfsdf/afx/d/24449YiNHN",
+      "status": "dead",
+      "commit": "f2b6b5c3",
+      "file": "README.md",
+      "finding": "AWS pair",
+      "score": 40,
+      "severity": "Low",
+      "action_taken": "logged_only"
+    }
+  ]
+}

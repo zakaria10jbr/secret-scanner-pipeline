@@ -58,11 +58,19 @@ def score_to_severity(score):
         return "Low"
 
 
-def score_finding(finding_type, verification_status):
+NON_PRODUCTION_PATH_MARKERS = ("test", "docs", "example", "spec")
+NON_PRODUCTION_PATH_PENALTY = 30
+
+
+def score_finding(finding_type, verification_status, file_path=None):
     type_weight = SECRET_TYPE_WEIGHTS.get(finding_type, DEFAULT_TYPE_WEIGHT)
     verification_weight = VERIFICATION_WEIGHTS.get(verification_status, VERIFICATION_WEIGHTS["unverifiable"])
 
     total_score = type_weight + verification_weight
+
+    if file_path is not None and any(marker in file_path.lower() for marker in NON_PRODUCTION_PATH_MARKERS):
+        total_score = max(0, total_score - NON_PRODUCTION_PATH_PENALTY)
+
     severity = score_to_severity(total_score)
 
     # Verification status can override the base severity in either direction:

@@ -131,6 +131,5 @@ def scan_repo(repo_path, patterns):
                             "line": added_line.strip(),
                         }
                         findings_report.append(result)
-                        print(f"[{finding}] Commit {result['commit']} — {result['file']}: {result['line']}")
 
     return findings_report

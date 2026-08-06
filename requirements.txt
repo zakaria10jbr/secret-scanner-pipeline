@@ -10,3 +10,9 @@ pyyaml
 
 boto3
 
+# ANSI color output on Windows/PowerShell
+colorama
+
+# Test runner
+pytest
+
