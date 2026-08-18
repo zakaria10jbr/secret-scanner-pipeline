@@ -212,27 +212,45 @@ def scan_current_state(repo_path, patterns):
     never sees a repo's first commit (no parent to diff against) — a secret
     introduced only there and never touched again would otherwise be invisible.
     """
+    # TEMPORARY DIAGNOSTIC INSTRUMENTATION — plain print(flush=True), not
+    # routed through Rich, so output survives even if the process hangs or
+    # gets killed before Rich's buffered/live output would otherwise flush.
+    # Remove once the CI hang (commit-history scan completes, current-state
+    # scan produces zero further output) is root-caused.
+    print("[DIAG scan_current_state] entered function", flush=True)
+
     repo = git.Repo(repo_path)
+    print("[DIAG scan_current_state] git.Repo() opened", flush=True)
+
     head_commit_sha = repo.head.commit.hexsha[:8]
+    print(f"[DIAG scan_current_state] resolved HEAD commit: {head_commit_sha}", flush=True)
+
     findings_report = []
 
     file_paths = []
+    print(f"[DIAG scan_current_state] starting os.walk({repo_path!r})", flush=True)
     for root, dirs, files in os.walk(repo_path):
         dirs[:] = [d for d in dirs if d != ".git"]
         for filename in files:
             file_paths.append(os.path.join(root, filename))
+    print(f"[DIAG scan_current_state] os.walk complete: {len(file_paths)} file(s): {file_paths}", flush=True)
 
+    print("[DIAG scan_current_state] entering progress bar context", flush=True)
     with _scan_progress() as progress:
         task = progress.add_task("Scanning current-state files", total=len(file_paths))
+        print("[DIAG scan_current_state] progress task created, starting file loop", flush=True)
 
         for file_path in file_paths:
             rel_path = os.path.relpath(file_path, repo_path).replace(os.sep, "/")
+            print(f"[DIAG scan_current_state] BEGIN file: {rel_path}", flush=True)
 
             try:
                 with open(file_path, "r", encoding="utf-8", errors="strict") as f:
                     content = f.read()
-            except Exception:
+            except Exception as e:
                 content = None
+                print(f"[DIAG scan_current_state]   read failed "
+                      f"({type(e).__name__}: {e}) — treated as skip", flush=True)
 
             if content is not None:
                 for line in content.split("\n"):
@@ -249,6 +267,8 @@ def scan_current_state(repo_path, patterns):
                             "source": "current_state",
                         })
 
+            print(f"[DIAG scan_current_state] END file: {rel_path}", flush=True)
             progress.advance(task)
 
+    print(f"[DIAG scan_current_state] loop complete, {len(findings_report)} finding(s)", flush=True)
     return findings_report
