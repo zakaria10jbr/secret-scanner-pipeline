@@ -3,19 +3,21 @@ import shutil
 import git
 
 
-def scan_remote_repo(repo_url, patterns, scan_repo_fn):
+def scan_remote_repo(repo_url, patterns, scan_fns):
     """
-    Clone a remote Git repository into a temporary directory, scan it using the
-    existing scan_repo() logic, then clean up the temporary directory afterward.
+    Clone a remote Git repository into a temporary directory, run each scan
+    function in scan_fns against it while it's still on disk, then clean up
+    the temporary directory afterward.
 
     Args:
         repo_url: HTTPS URL of the Git repository to scan (e.g. a GitHub URL).
         patterns: the loaded pattern dictionary, as returned by load_patterns().
-        scan_repo_fn: the existing scan_repo() function from detectors.py,
-                      passed in to avoid a circular import.
+        scan_fns: list of scan functions from detectors.py (e.g. scan_repo,
+                  scan_current_state), each called as scan_fn(tmp_dir, patterns),
+                  passed in to avoid a circular import.
 
     Returns:
-        The same findings list that scan_repo() normally returns.
+        The concatenated findings lists from every function in scan_fns.
     """
     tmp_dir = tempfile.mkdtemp(prefix="secret_scan_")
     try:
@@ -23,7 +25,9 @@ def scan_remote_repo(repo_url, patterns, scan_repo_fn):
         git.Repo.clone_from(repo_url, tmp_dir)
         print("Clone complete. Starting scan...\n")
 
-        results = scan_repo_fn(tmp_dir, patterns)
+        results = []
+        for scan_fn in scan_fns:
+            results.extend(scan_fn(tmp_dir, patterns))
         return results
 
     finally:

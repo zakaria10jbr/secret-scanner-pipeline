@@ -13,6 +13,9 @@ boto3
 # ANSI color output on Windows/PowerShell
 colorama
 
+# Polished terminal output — panels, tables, progress bars
+rich
+
 # Test runner
 pytest
 

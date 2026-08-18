@@ -1,0 +1,1129 @@
+\documentclass[12pt]{article}
+\usepackage[top=1in,bottom=1in,left=1.25in,right=1.25in]{geometry}
+
+% Core packages
+\usepackage{amsmath,amssymb}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[hidelinks]{hyperref}
+
+% Accent color, pulled from the DataProtect logo
+\definecolor{accentred}{RGB}{214,39,40}
+\definecolor{darkgray}{RGB}{50,50,50}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.6mm}}
+
+% Paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1\baselineskip}
+\setlength{\emergencystretch}{3em}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+\pagenumbering{gobble}
+\hypersetup{pageanchor=false}
+
+% ============================================================
+%  TITLE PAGE
+% ============================================================
+\begin{titlepage}
+\begin{sffamily}
+\begin{center}
+
+% --- Logos ---
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[height=2.2cm]{Ensat.jpg}
+\end{minipage}
+\hfill
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[height=1.1cm]{logo_dataprotect.png}
+\end{minipage}
+
+\vspace{1cm}
+
+\textsc{\large Abdelmalek Essaadi University}\\[0.2cm]
+\textsc{\large National School of Applied Sciences of Tangier}\\[1.2cm]
+
+{\color{accentred}\textsc{\Large End of Year Internship Report}}\\[0.3cm]
+\textsc{\normalsize Engineering Program: Cybersecurity and Cyberintelligence}\\[1.5cm]
+
+% --- Title ---
+{\color{accentred}\HRule}\\[0.5cm]
+{\huge \bfseries Continuous Secret Scanning Tool \\[0.3cm]}
+{\Large with Criticality Scoring and Automated\\ Remediation Pipeline}\\[0.5cm]
+{\color{accentred}\HRule}\\[2cm]
+
+% --- Author / Supervisor ---
+\begin{minipage}{0.45\textwidth}
+\begin{flushleft} \large
+\emph{Prepared by:}\\
+Zakariae \textsc{Jabiri}
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.45\textwidth}
+\begin{flushright} \large
+\emph{Supervised by:}\\
+\textsc{DataProtect}
+\end{flushright}
+\end{minipage}
+
+\vspace{2cm}
+
+{\large July -- August 2026}\\[1.5cm]
+
+\vfill
+
+{\large \textsc{Academic Year 2025 -- 2026}}
+
+\end{center}
+\end{sffamily}
+\end{titlepage}
+
+% ============================================================
+%  TABLE OF CONTENTS
+% ============================================================
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\hypersetup{pageanchor=true}
+
+% ============================================================
+%  FOREWORD
+% ============================================================
+\section*{Foreword}
+\addcontentsline{toc}{section}{Foreword}
+
+This report presents the work carried out during my end-of-year internship at
+DataProtect, supervised by [Supervisor Name]. The study focused on designing
+and evaluating a continuous secret-scanning tool, extending existing detection
+techniques with active verification, criticality scoring, and automated
+remediation to strengthen organizational security posture. I would like to
+thank my supervisor and colleagues at DataProtect for their guidance and
+support during this project.
+
+\textbf{First and Last Name:} Zakariae Jabiri
+
+\textbf{Title of the Project:} Continuous Secret Scanning Tool with
+Criticality Scoring and Automated Remediation Pipeline
+
+\textbf{Host Institution:} DataProtect
+
+\textbf{Supervisor:} [Supervisor Name]
+
+\textbf{Duration:} 2 months
+
+\newpage
+
+% ============================================================
+%  ACKNOWLEDGMENTS
+% ============================================================
+\section*{Acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+
+I would like to begin by expressing my deepest gratitude to my family. Their
+constant support, encouragement, and patience have been essential throughout
+my academic journey and during this internship. They have always stood by me,
+providing the motivation and reassurance I needed to move forward, especially
+during moments of doubt or difficulty. Without their presence and sacrifices,
+I would not have been able to reach this stage of my studies.
+
+I would like to express my special gratitude to my internship supervisor,
+[Supervisor Name], for his guidance, availability, and support throughout this
+experience. His advice, technical insights, and follow-up were of great help in
+overcoming the challenges I encountered and in completing this project in the
+best possible conditions. His involvement allowed me to make the most of this
+internship, and I truly appreciate the time and attention he devoted to my
+work.
+
+My thanks also go to the company DataProtect for giving me the opportunity to
+carry out my internship within their organization. Being welcomed into a
+professional environment specialized in information security has been a truly
+enriching experience. This internship offered me the chance to discover new
+concepts, to broaden my knowledge, and to work on a project relevant to
+real-world DevSecOps practices.
+
+This internship has been an important step in my academic and professional
+path, offering me the opportunity to strengthen my technical skills, discover
+the expectations of the professional world, and gain a clearer vision of the
+challenges in the field of cybersecurity. To my family, [Supervisor Name], and
+the team at DataProtect, I express my sincere and heartfelt gratitude.
+
+\newpage
+
+% ============================================================
+%  ABSTRACT
+% ============================================================
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+
+This internship at DataProtect focused on designing and implementing a
+continuous secret-scanning tool for Git repositories, extending an established
+reference tool (TruffleHog) along three axes explicitly required by the project
+subject: active verification, criticality scoring, and automated remediation.
+The project established a detection engine combining regex-based pattern
+matching against an 883-rule curated library (Secrets-Patterns-DB) with Shannon
+entropy analysis for generic, format-agnostic secrets, complete with full Git
+history traversal to detect secrets even after their removal from the current
+codebase. Active verification was implemented and validated against live
+provider APIs across ten independent secret types --- AWS (via STS, including
+a same-commit credential-pairing mechanism), GitHub, and Slack --- classifying
+each finding as live, dead, or unverifiable. A criticality scoring model
+combining secret type and verification status was implemented and validated
+through unit testing, translating findings into four actionable severity
+levels. The tool was further exposed as a command-line utility supporting both
+local repository paths and remote Git URLs, the latter validated against an
+external, unmodified public repository to confirm its genericity. Results
+demonstrated iterative improvement of the detection engine through real
+testing, reducing false positives and duplicate findings across successive
+corrections, and confirmed correct behavior of the verification and scoring
+mechanisms against a combined test dataset of fabricated credentials.
+Limitations were identified, particularly in partial deduplication of
+overlapping pattern matches and the proximity-based nature of AWS credential
+pairing. The findings emphasize that detection alone is insufficient for
+secrets security, and highlight the practical gap --- documented industry-wide
+--- between identifying an exposed secret and neutralizing the risk it
+represents.
+
+\textbf{Keywords:} secret scanning, Git history analysis, entropy detection,
+criticality scoring, automated remediation, active verification, DevSecOps,
+TruffleHog, Secrets-Patterns-DB, AWS STS, false positive filtering, continuous
+security scanning.
+
+\newpage
+
+% ============================================================
+%  LIST OF FIGURES / TABLES / ABBREVIATIONS
+% ============================================================
+\listoffigures
+\addcontentsline{toc}{section}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{section}{List of Tables}
+\newpage
+
+\section*{List of Abbreviations}
+\addcontentsline{toc}{section}{List of Abbreviations}
+
+\begin{tabular}{@{}ll@{}}
+API & Application Programming Interface \\
+AWS & Amazon Web Services \\
+CI/CD & Continuous Integration / Continuous Deployment \\
+CLI & Command-Line Interface \\
+CSPM & Cloud Security Posture Management \\
+DAST & Dynamic Application Security Testing \\
+DevSecOps & Development, Security, and Operations \\
+GCP & Google Cloud Platform \\
+JSON & JavaScript Object Notation \\
+PCI & Payment Card Industry \\
+SAST & Static Application Security Testing \\
+SCA & Software Composition Analysis \\
+STS & Security Token Service (AWS) \\
+YAML & YAML Ain't Markup Language \\
+\end{tabular}
+
+\newpage
+
+% ============================================================
+%  1. GENERAL INTRODUCTION
+% ============================================================
+\section{General Introduction}
+
+\subsection{Context}
+
+Modern software development relies on an ever-growing number of integrations: third-party APIs, cloud services, databases, collaboration platforms. Each of these integrations requires credentials --- API keys, tokens, passwords, certificates --- that developers must, at some point, handle directly in their code. When these credentials are hardcoded rather than managed through a proper secrets vault, they risk being accidentally committed to a Git repository --- a common mistake, often made under delivery pressure or simply as a local testing habit.
+
+The scale of this phenomenon is documented annually by GitGuardian in its \emph{State of Secrets Sprawl} report. According to the 2026 edition, 28.65 million new hardcoded secrets were detected in public GitHub repositories in 2025 alone --- a 34\% increase over the previous year, the largest annual jump ever recorded. Since 2021, the volume of exposed secrets has grown by 152\%, compared to 98\% growth in the active developer population over the same period --- a sign that the problem is worsening structurally, not merely tracking the growth of the developer population itself. The rise of AI-assisted coding tools has accelerated this trend further: AI-assisted commits reportedly leak secrets at roughly twice the rate of purely human-written commits.
+
+More concerning still for operational security: 64\% of valid secrets exposed in 2022 remain active and exploitable today. This figure reveals that detection alone is not sufficient --- a secret that has been identified but never revoked remains an exploitable entry point for an attacker, sometimes for years.
+
+\subsection{Problem Statement/Relevance}
+
+In response to this reality, a distinct category of DevSecOps tooling has developed specifically around \emph{secrets detection}, separate from SAST, DAST, and SCA approaches:
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|Y|p{0.24\textwidth}|}
+\hline
+\textbf{Category} & \textbf{What it checks} & \textbf{Example tools} \\
+\hline
+SAST & Source code --- vulnerable code patterns & Semgrep, SonarQube \\
+DAST & Running application behavior & OWASP ZAP, Burp \\
+SCA & Third-party dependencies --- known CVEs & Snyk, Dependabot \\
+\textbf{Secrets Detection} & Code and history --- hardcoded credentials & \textbf{TruffleHog, GitLeaks} \\
+\hline
+\end{tabularx}
+\caption{Positioning of secrets detection among DevSecOps tool categories.}
+\label{tab:devsecops-categories}
+\end{table}
+
+TruffleHog stands as a reference tool in this space: an open-source, Go-based scanner that walks the full Git history, combines regex-based detection (800+ pre-configured patterns) with entropy-based detection, and even offers active verification for certain secret types. This foundation is solid, but presents known limitations that define the scope for improvement targeted by this internship:
+
+\begin{itemize}
+    \item \textbf{False positives} --- generic detectors (entropy, broad patterns) frequently flag hashes, UUIDs, or encoded data that are not actual secrets.
+    \item \textbf{No prioritization} --- all findings are presented with equal apparent importance, leaving a human analyst to manually triage potentially large volumes of results.
+    \item \textbf{Partial verification} --- only certain secret types have an active verifier; for the rest, no information on real-world validity is provided.
+    \item \textbf{No action} --- the tool stops at producing a report; no native integration exists to trigger an automated response (alert, revocation) based on severity.
+\end{itemize}
+
+This last limitation directly echoes a finding from the GitGuardian 2026 report: the security bottleneck for secrets no longer lies primarily in detection, but in revocation --- a secret that is detected but never invalidated remains an active, exploitable identity.
+
+\subsection{Objectives of the project}
+
+The objectives of this internship project were defined along three main axes:
+
+\begin{enumerate}
+    \item \textbf{Technical Objectives}
+    \begin{itemize}
+        \item Deploy a functioning secret-detection engine capable of scanning a Git repository's entire commit history, not just its current file state.
+        \item Curate and integrate an external, open-source pattern library (Secrets-Patterns-DB) for regex-based detection, filtered by confidence level to limit noise.
+        \item Implement entropy-based detection to catch generic secrets with no known format.
+        \item Develop and validate active verification mechanisms against real, live provider APIs (AWS, GitHub, Slack), including a credential-pairing mechanism for AWS's two-part key structure.
+        \item Design and implement a criticality scoring model combining secret type and verification status into an actionable severity level.
+        \item Expose the tool as a command-line utility supporting both local repository scanning and remote scanning via URL.
+    \end{itemize}
+
+    \item \textbf{Evaluation Objectives}
+    \begin{itemize}
+        \item Validate each detection and verification mechanism against a combined dataset merging a public test-fixture repository with custom, purpose-built test scenarios.
+        \item Iteratively identify and correct real defects in the detection pipeline (false-positive scope, deduplication) through repeated testing rather than one-off validation.
+        \item Confirm the tool's genericity by testing it against an external, unmodified repository it had not been tailored against.
+        \item Position the resulting tool relative to existing open-source and commercial secrets-detection solutions.
+    \end{itemize}
+
+    \item \textbf{Educational Objectives}
+    \begin{itemize}
+        \item Acquire practical expertise in Git internals, DevSecOps tooling categories, and secrets-detection methodology.
+        \item Develop a structured, test-driven methodology for building and validating a multi-stage security tool (detect $\rightarrow$ verify $\rightarrow$ score $\rightarrow$ remediate).
+        \item Strengthen professional readiness for DevSecOps and cloud security engineering roles by working directly with real cloud provider APIs under safe, controlled conditions.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Scope and Limitations}
+
+\subsubsection*{Scope}
+
+This project was designed to focus on two complementary areas of secrets
+security within a controlled testing environment:
+
+\textbf{Detection Engine}
+
+\begin{itemize}
+    \item Regex-based detection using a curated, confidence-filtered external pattern library.
+    \item Entropy-based detection for generic, format-agnostic secrets.
+    \item Full Git history traversal, including detection of secrets removed in later commits.
+    \item Command-line interface supporting both local and remote (URL-based) repository scanning.
+\end{itemize}
+
+\textbf{Verification, Scoring, and Remediation}
+
+\begin{itemize}
+    \item Active, read-only verification against provider APIs.
+    \item A weighted criticality scoring model translating findings into actionable severity levels.
+    \item An automated remediation pipeline providing structured advice and severity-based alert routing.
+\end{itemize}
+
+The project scope was deliberately aligned with the internship subject's four
+stated axes, with the aim of extending an established reference tool
+(TruffleHog) rather than reimplementing secrets detection from first
+principles.
+
+\subsubsection*{Limitations}
+
+Although the project successfully covered the targeted domains, several
+limitations were defined to ensure safety, focus, and feasibility:
+
+\begin{itemize}
+    \item \textbf{Controlled Test Data Only:} All verification testing was performed exclusively against fabricated, non-functional credentials, with the sole exception of one intentionally-maintained canary credential encountered during external validation (Section~6.9.1). No real, live secrets belonging to any individual or organization were used or scanned at any point in this project.
+    \item \textbf{Partial Verification Coverage:} Active verification was implemented and validated for ten secret types (AWS, GitHub, Slack, Stripe, GitLab, Discord bot tokens, Discord webhooks, Dropbox, Mailchimp, Google API keys) out of the 883 patterns the tool can detect, with an eleventh category (Shopify) explicitly routed through a documented non-verifiable path rather than left unexplained. This mirrors the partial-verification behavior of reference tools such as TruffleHog, rather than constituting a shortfall specific to this project.
+    \item \textbf{Proximity-Based AWS Pairing:} The mechanism linking AWS Access Key IDs to their corresponding Secret Access Keys relies on co-occurrence within the same commit and file, and does not guarantee correct pairing in repositories where credentials are split across unrelated locations or share a single line.
+    \item \textbf{Time and Resources:} Due to internship duration constraints, remediation actions were limited to alerting, structured advice, and reporting; destructive actions such as automated credential revocation were deliberately not implemented against real infrastructure.
+    \item \textbf{Educational Purpose:} The work was intended for academic and professional learning, and the resulting tool constitutes a functional prototype rather than a production-ready, enterprise-scale secrets-management solution.
+\end{itemize}
+
+\newpage
+
+% ============================================================
+%  2. HOST ORGANIZATION
+% ============================================================
+\section{Host Organization}
+
+\subsection{Company Overview}
+
+DataProtect is a Moroccan cybersecurity company founded in 2009 that has grown
+into a leading player in the information security industry [1]. Established by
+CEO Ali El Azzouzi in Casablanca, DataProtect began as one of the first
+specialized cybersecurity firms in Morocco and has since expanded its expertise
+and international footprint [2]. As of the mid-2020s, the company serves over
+800 clients across four continents and employs approximately 150--200 security
+professionals, positioning it as a recognized cybersecurity integrator in the
+global market [1, 2]. The company's growth reflects continuous innovation in
+response to emerging cyber threats and a commitment to delivering security
+services and solutions tailored to enterprise needs.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\textbf{Company} & DataProtect \\
+\textbf{Field} & Cybersecurity services and solutions \\
+\textbf{Founded} & 2009 \\
+\textbf{Founder / CEO} & Ali El Azzouzi \\
+\textbf{Headquarters} & CFC Tower, Casablanca, Morocco \\
+\textbf{Branches} & Paris (2016), Abidjan (2022), Dubai (2025) \\
+\textbf{Employees} & \textasciitilde150--200 security professionals \\
+\textbf{Clients} & 800+ active clients, 45+ countries \\
+\end{tabular}
+\caption{DataProtect identity sheet.}
+\label{tab:dataprotect-identity}
+\end{table}
+
+\subsection{History and Founding Background}
+
+DataProtect was founded in 2009 in Casablanca, Morocco, by Ali El Azzouzi, an
+information security expert and author of a 2010 book on cybercrime in Morocco
+[2]. From its inception, the company aimed to fill a crucial regional gap for
+dedicated cybersecurity services. Early initiatives included establishing one
+of Morocco's first Security Operations Centers (SOC) to provide 24/7 security
+monitoring under multi-year contracts and creating an ethical hacking lab to
+industrialize penetration testing practices [1]. These milestones were achieved
+in the company's first years and signalled a clear focus on innovation and
+quality.
+
+By 2011, DataProtect became the first organization in North and Francophone
+Africa accredited as a PCI DSS Qualified Security Assessor (QSA), enabling it
+to audit and certify payment-security postures for customers across the region
+[1]. International expansion followed: a Paris office opened in 2016, a
+regional African office in Abidjan, C\^ote d'Ivoire, was established in 2022, and
+a Gulf-region presence in Dubai, UAE, was added in 2025 [2, 1]. These strategic
+moves reflect steady growth and an emphasis on meeting rising cybersecurity
+demand in Europe, West Africa, and the Middle East.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    office/.style={draw=accentred, rounded corners, thick, align=center,
+                   minimum width=2.5cm, minimum height=0.9cm},
+    link/.style={->, thick, color=darkgray}
+]
+\node[office, fill=accentred!10] (casa) at (0,0) {Casablanca\\Headquarters};
+\node[office] (paris) at (-4,-2) {Paris\\2016};
+\node[office] (abidjan) at (0,-2.8) {Abidjan\\2022};
+\node[office] (dubai) at (4,-2) {Dubai\\2025};
+\draw[link] (casa) -- (paris);
+\draw[link] (casa) -- (abidjan);
+\draw[link] (casa) -- (dubai);
+\end{tikzpicture}
+\caption{DataProtect's international presence (headquarters: Casablanca; branches: Paris, Abidjan, and Dubai).}
+\label{fig:dataprotect-presence}
+\end{figure}
+
+\subsection{Main Areas of Activity and Expertise}
+
+DataProtect is a pure-play cybersecurity company delivering an end-to-end
+portfolio of services across prevention, detection, response, and resilience.
+The company combines managed services, consulting, offensive security,
+technology integration, and training to serve enterprise and public-sector
+customers. It is within this environment that the present internship's
+technical activities were carried out, at the intersection of offensive
+security tooling and DevSecOps practice.
+
+The main areas of activity and expertise include:
+
+\begin{itemize}
+    \item \textbf{Security Operations Center (CyberSOC) \& CSIRT} --- A 24/7 CyberSOC integrated with Africa's first private FIRST-certified CSIRT, capable of monitoring very high event volumes and providing continuous detection, forensic investigation, and incident response through a team of certified experts.
+    \item \textbf{Managed Security Services (MSSP)} --- Outsourced management of firewalls, IDS/IPS, SIEM, and other defensive controls, enabling clients to maintain robust protection without large in-house security teams.
+    \item \textbf{Offensive Security} --- Ethical hacking, penetration testing, and red teaming performed through DataProtect's ethical hacking lab, offering standardized and advanced vulnerability assessment and simulation services.
+    \item \textbf{Governance, Risk \& Compliance (GRC)} --- Consulting for compliance and risk-management frameworks including PCI DSS, ISO/IEC~27001, ISO~22301, and regional data-protection laws, from gap analyses to certification support and audits.
+    \item \textbf{Cyber Defense Solutions Integration} --- Design and deployment of integrated solutions for network security, endpoint protection, SIEM, encryption, DLP, and IAM, tailored and integrated to meet client-specific needs.
+    \item \textbf{Expert Resources \& Training} --- Provision of certified consultants and accredited training, such as EC-Council CEH. Through the ``DataProtect Institute,'' the company runs workshops, certification programs, and awareness campaigns to build customer capacity.
+\end{itemize}
+
+Together, these areas demonstrate DataProtect's end-to-end cybersecurity
+capabilities: consulting and auditing, technology integration, managed
+services, offensive testing, and capacity building, positioning it as a
+trusted partner for organizations of all sizes.
+
+\subsection{Sectoral Clients and Industries Served}
+
+Since its launch, DataProtect has delivered over 2,000 projects in more than 45
+countries, building strong expertise across multiple high-stakes industries.
+The company's multisectoral client base allows it to adapt security solutions
+to sector-specific risks while leveraging cross-industry experience to improve
+resilience.
+
+Key sectors and examples of services include:
+
+\begin{itemize}
+    \item \textbf{Banking \& Financial Services} --- A core focus, with over 100 banks and financial institutions relying on DataProtect for cybersecurity governance, payment security (including PCI DSS certification for interbank networks such as GIM-UEMOA), and fraud prevention.
+    \item \textbf{Telecommunications} --- Audits, SOC monitoring, and incident response for major telecom operators to protect critical infrastructure and ensure regulatory compliance.
+    \item \textbf{Energy \& Utilities} --- Security for SCADA/ICS environments in oil, gas, and utility companies to reduce the risk of large-scale operational disruption.
+    \item \textbf{Government \& Public Sector} --- Collaboration with agencies in Morocco and across Africa, such as ARTCI in C\^ote d'Ivoire, to implement national standards, protect citizen data, and align with digital strategies such as Morocco Digital 2030.
+    \item \textbf{Technology \& Offshoring} --- Support for IT service providers and outsourcing firms with compliance, audits, and managed security solutions required by international customers.
+    \item \textbf{Travel, Hospitality \& Transport} --- Protection of payment systems, customer data, and operational networks for airlines, hotels, and logistics firms.
+    \item \textbf{Retail, Distribution \& Industry} --- Securing POS systems, customer data, and industrial IoT environments for large retail chains, distributors, and manufacturers.
+\end{itemize}
+
+In summary, DataProtect's clients span finance, telecommunications, energy,
+government, technology, and retail sectors, enabling the company to provide
+sector-aware security programs and transfer lessons learned across industries.
+
+\subsection{Accreditations, Partnerships, and Achievements}
+
+Throughout its development, DataProtect has earned numerous certifications,
+partnerships, and industry-firsts that validate its expertise and leadership in
+cybersecurity:
+
+\begin{itemize}
+    \item \textbf{Payment Security Certifications} --- First company in Morocco accredited as PCI QSA and PA-QSA, later expanding to PCI 3DS, PCI PIN, and PCI SSFA, enabling audits and certifications for financial institutions across Africa and the Middle East.
+    \item \textbf{PCI Forensic Investigator (PFI)} --- The only African company accredited as a PFI in 2025, authorized to investigate global payment-card data breaches.
+    \item \textbf{PASSI Accreditation} --- Certified by the French ANSSI as a trusted provider of security audits in six qualification areas.
+    \item \textbf{FIRST-Certified CSIRT} --- Operates the first private CSIRT in Africa accredited by FIRST, ensuring globally recognized incident-response standards.
+    \item \textbf{Training Excellence} --- Accredited Training Center (ATC) for cybersecurity certifications from EC-Council and PECB.
+    \item \textbf{Strategic Partnerships} --- Collaborates with leading vendors such as IBM and other global security providers to deliver best-in-class solutions.
+    \item \textbf{Pioneering Projects} --- Behind the first PCI DSS certifications in Morocco and Sub-Saharan Africa, as well as the first SOC and ethical hacking lab in Morocco.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    cert/.style={draw=accentred, rounded corners, thick, align=center,
+                 minimum width=2.3cm, minimum height=0.85cm},
+    core/.style={draw=darkgray, fill=darkgray!10, rounded corners, very thick,
+                 align=center, minimum width=2.8cm, minimum height=1cm},
+    link/.style={thick, color=darkgray}
+]
+\node[core] (dp) at (0,0) {DataProtect\\Accreditations};
+\node[cert] (pci) at (-4,1.8) {PCI QSA\\PA-QSA};
+\node[cert] (pfi) at (0,2.4) {PCI PFI};
+\node[cert] (passi) at (4,1.8) {PASSI\\ANSSI};
+\node[cert] (first) at (-4,-1.8) {FIRST\\CSIRT};
+\node[cert] (atc) at (0,-2.4) {EC-Council\\PECB ATC};
+\node[cert] (partners) at (4,-1.8) {Strategic\\Partners};
+\draw[link] (dp) -- (pci);
+\draw[link] (dp) -- (pfi);
+\draw[link] (dp) -- (passi);
+\draw[link] (dp) -- (first);
+\draw[link] (dp) -- (atc);
+\draw[link] (dp) -- (partners);
+\end{tikzpicture}
+\caption{DataProtect's accreditations and certifications across multiple domains.}
+\label{fig:dataprotect-accreditations}
+\end{figure}
+
+\subsection{Highlights}
+
+With a background marked by significant events and challenges, DataProtect has
+built and reinforced its expertise while supporting the cybersecurity
+strategies of numerous organizations. With over 300 cybersecurity
+certifications to its track record, the company's journey reflects an ongoing
+drive for continuous improvement. It is within this same drive for continuous
+improvement --- extending detection tooling beyond what off-the-shelf
+open-source scanners provide --- that the present internship project was
+defined.
+
+\newpage
+
+% ============================================================
+%  3. THEORETICAL BACKGROUND
+% ============================================================
+\section{Theoretical Background}
+
+\subsection{General Concepts of Secrets Detection}
+
+Secrets detection tools scan source code --- and, for more advanced tools, the complete Git commit history --- searching for patterns matching known credential formats (AWS keys, GitHub tokens, etc.) or strings exhibiting high statistical randomness, characteristic of generic secrets.
+
+\subsubsection{Git as a Secrets Exposure Surface}
+
+A fundamental property of Git underlies why history-aware scanning matters: a commit represents a snapshot of the project at a given point in time, and deleting a line in a later commit does not erase it from earlier commits. A secret added and later removed from the code therefore remains technically accessible to anyone inspecting the repository's history, potentially indefinitely.
+
+\subsubsection{The .git Internal Structure and Commit History}
+
+Every Git repository stores its entire history locally in a hidden \texttt{.git/} directory at the repository's root, containing every commit and every past version of every file as compressed objects addressed by content hash. This is why history-aware scanning requires no network access once a repository is available on disk: the full commit graph --- each commit pointing to its parent(s) and to a tree of file blobs --- is already present locally. A scanning tool needs only to traverse this graph, computing the difference between consecutive commits to isolate what changed at each step.
+
+\subsection{Overview of Detection Techniques}
+
+Three complementary techniques form the core of the detection and verification approach used in this project.
+
+\subsubsection{Regex-Based Detection}
+
+Secrets from major providers follow a recognizable shape (e.g.\ an AWS access key: \texttt{AKIA[0-9A-Z]\{16\}}). A dictionary of \{secret type: pattern\} is checked against each line of code. This approach reliably catches known, structured formats, but cannot detect secret types it has not been explicitly configured for.
+
+\subsubsection{Entropy-Based Detection}
+
+Shannon entropy measures how random-looking a string is:
+\[
+H = -\sum_{i} p_i \log_2(p_i)
+\]
+where $p_i$ is the probability of occurrence of each distinct character in the string. Predictable or repetitive strings score low; strings with a near-uniform character distribution --- characteristic of randomly generated tokens --- score high. This technique catches generic secrets with no recognizable format, at the cost of a higher false-positive rate on other high-randomness, non-secret content (hashes, UUIDs, encoded data, URLs).
+
+\subsubsection{Active Verification}
+
+Beyond pattern matching, a detected secret's real-world validity can be tested through a lightweight, read-only API call specific to the provider it belongs to --- for example, AWS's Security Token Service (\texttt{sts:GetCallerIdentity}) returns caller identity information only if the supplied credentials are genuinely valid, without exposing or modifying any account data. This technique classifies each finding along three possible states: \texttt{live} (confirmed active), \texttt{dead} (confirmed invalid or revoked), or \texttt{unverifiable} (no safe verification method available for this secret type). A recurring design principle across every provider verified in this project is to always select the endpoint the provider itself designates for identity or authentication checking (AWS STS, GitHub's \texttt{/user}, Slack's \texttt{auth.test}, Stripe's \texttt{/v1/balance}), rather than repurposing a data-bearing endpoint for this purpose.
+
+\subsection{Presentation of the Main Tools Used}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.29\textwidth}|Y|}
+\hline
+\textbf{Component} & \textbf{Role in the project} \\
+\hline
+Python 3 & Main project language \\
+GitPython & Git history traversal and diff extraction \\
+Regex (\texttt{re} module) & Pattern-based detection (AWS keys, GitHub tokens, etc.) \\
+Shannon entropy (custom) & Detection of generic secrets with no known format \\
+PyYAML & Loading of the external pattern library (Gitleaks-style format) \\
+boto3 / requests & Active secret verification via API calls \\
+python-dotenv & Secure handling of configuration variables \\
+argparse & Command-line interface (\texttt{--url}/\texttt{--path}/\texttt{--history-only}/\texttt{--baseline}/\texttt{--min-confidence}/\texttt{--patterns}) \\
+colorama & Severity-colored terminal output \\
+\hline
+\end{tabularx}
+\caption{Technical stack used in the implementation.}
+\label{tab:tech-stack}
+\end{table}
+
+\subsection{State of the Art / Related Work}
+
+\subsubsection{TruffleHog}
+
+TruffleHog is the primary reference tool for this project: an open-source, Go-based scanner combining Git history traversal, regex and entropy detection, and partial active verification. Its limitations --- detailed in Section~1.2 --- directly motivate the improvement axes pursued in this internship. TruffleHog also maintains an official public test repository, \texttt{trufflesecurity/test\_keys}, containing intentionally-leaked canary credentials used for validating secret scanners; this repository is used as one of three external validation targets in Section~6.9.
+
+\subsubsection{GitLeaks and Betterleaks}
+
+GitLeaks is a widely-adopted open-source secrets scanner built around a smaller, curated ruleset (\textasciitilde60 rules) than the library used in this project. In early 2026, GitLeaks' original author began \emph{Betterleaks}, a direct open-source successor that pairs detection with live credential validation --- independently converging on the same detect-then-verify architecture pursued in this project.
+
+\subsubsection{Secrets-Patterns-DB}
+
+Secrets-Patterns-DB~\cite{secretspatternsdb}, maintained by mazen160, is the open-source pattern database used as the regex detection library for this project. It aggregates over 1,600 regular expressions for secret and credential detection, positioning itself as a more exhaustive alternative to the pattern libraries built into TruffleHog (\textasciitilde700 rules) or GitLeaks (\textasciitilde60 rules), while remaining format-compatible with both.
+
+\subsubsection{org-secret-scan (GSS)}
+
+\texttt{org-secret-scan}~\cite{orgsecretscan}, developed by douglasmun, is a smaller-scale open-source project combining the same regex $\to$ entropy $\to$ context $\to$ denylist detection pipeline pursued in this project, along with a context-aware scoring model (e.g.\ scoring a value found in a production file path higher than the same value found in a test file path) and detailed, per-provider remediation guidance. It represents the closest publicly available reference to this project's overall architecture and is used as the primary point of comparison in Section~6.11.
+
+\subsubsection{Commercial Platforms}
+
+Commercial secrets-security platforms (e.g.\ GitGuardian, Cycode, Spectral) extend the same detect-verify-remediate model to organization-wide scale, adding dashboards, SIEM integration, and workflow automation beyond what open-source tooling typically provides. Their existence confirms that the three-stage architecture pursued in this project (detection, prioritization, remediation) is an industry-recognized pattern, not a design choice unique to this internship.
+
+\newpage
+
+% ============================================================
+%  4. SOLUTION ARCHITECTURE
+% ============================================================
+\section{Solution Architecture}
+
+\subsection{Pipeline Overview}
+
+The tool is designed as a sequential pipeline of three independent stages, each corresponding to a distinct Python module. This separation allows each stage to be developed, tested, and evolved independently, while maintaining a clear interface between them: each stage receives the previous stage's output as input.
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.22\textwidth}|Y|p{0.24\textwidth}|}
+\hline
+\textbf{Stage} & \textbf{Role} & \textbf{Module} \\
+\hline
+1. Detection & Git history and current-state scanning, secret identification & \texttt{detectors.py} \\
+2. Verification \& Scoring & Validity confirmation and risk assessment & \texttt{verifier.py}, \texttt{scoring.py} \\
+3. Remediation & Alerting, advice, and structured reporting & \texttt{remediation.py} \\
+\hline
+\end{tabularx}
+\caption{Pipeline stages and their corresponding modules.}
+\label{tab:pipeline-stages}
+\end{table}
+
+\subsection{Component Diagram}
+
+The overall flow can be summarized as follows:
+
+\begin{center}
+\small
+\begin{verbatim}
+Git repo -> walk commits (history) + read HEAD (current-state)
+   -> extract candidate lines
+   -> detection (regex + entropy) --------------------> detectors.py
+   -> verification (live/dead/unverifiable) -----------> verifier.py
+   -> scoring (weighted factors -> severity) ----------> scoring.py
+   -> remediation (advice + routing + JSON report) ----> remediation.py
+\end{verbatim}
+\end{center}
+
+Orchestration is handled by a single entry point (\texttt{main.py}), exposed as a command-line tool. Every stage communicates through a shared finding dictionary structure (finding type, detection method, commit, file, matched value, verification status, score, severity, remediation action, and current-state presence), allowing each stage to be tested independently before integration.
+
+\subsection{Data Flow Design}
+
+Two complementary detection passes feed the same downstream pipeline: a history-walking pass (diff-based, catching secrets that were later removed) and a current-state pass (reading every file at \texttt{HEAD}, closing the gap left by history-walking's inability to examine a repository's first commit, which has no parent to diff against). Findings from both passes are merged and deduplicated before verification, ensuring a secret caught by both mechanisms is reported only once.
+
+\subsection{Technical Stack}
+
+Python was chosen for its rich ecosystem of libraries for Git manipulation and network calls, as well as its speed of prototyping --- an important factor given the internship's duration. The regex pattern library used is a curated subset of rules drawn from an established open-source project (see Section~3.4.3), filtered by confidence level (\texttt{high}/\texttt{low}) to limit false positives as early as the detection stage, rather than blindly integrating an entire library of several hundred rules.
+
+\subsection{Command-Line Interface Design}
+
+The tool is exposed as a CLI accepting either a local repository path (\texttt{--path}) or a remote Git URL (\texttt{--url}). In the latter case, the target repository is cloned into a temporary directory, scanned using the identical pipeline logic used for local paths, and the temporary directory is deleted automatically once scanning completes --- allowing the tool to be pointed at any public repository without manual cloning. This design directly supports the \emph{continuous scanning} requirement stated in the project subject, since the tool is not tied to a fixed, pre-cloned local repository.
+
+Four additional flags refine scan behavior: \texttt{--history-only} opts out of the current-state scanning pass for faster, narrower scans when the first-commit blind spot (Section~5.1.2) is not a concern; \texttt{--min-confidence} selects the pattern confidence threshold (\texttt{high} or \texttt{medium}) used when loading the pattern library, though in practice \texttt{medium} currently behaves identically to \texttt{high} since the bundled pattern file only distinguishes \texttt{high} and \texttt{low} tiers (Section~5.1.3), with no \texttt{medium} tier present in the source data; \texttt{--patterns} allows substituting a custom pattern YAML file in place of the bundled library; and \texttt{--baseline} enables incremental scanning (Section~5.6), comparing the current scan against a saved record of a previous scan of the same repository and restricting detailed output to newly-introduced findings only.
+
+\subsection{Command-Line Packaging}
+
+To avoid requiring users to invoke the tool as \texttt{python main.py ...}, the project is packaged with a \texttt{pyproject.toml} defining a console-script entry point (\texttt{secretscan = "main:main"}). After a one-time editable install (\texttt{pip install -e .}), the tool becomes available as a standalone \texttt{secretscan} command on the system path, usable from any directory without referencing the project's location or Python explicitly. This was validated by confirming \texttt{secretscan --help} and full scans invoked via \texttt{secretscan --path ...} produce output identical to their \texttt{python main.py} equivalents.
+
+\newpage
+
+% ============================================================
+%  5. IMPLEMENTATION
+% ============================================================
+\section{Implementation}
+
+\subsection{Phase 1 --- Detection Engine}
+
+\subsubsection{Git History Scanning}
+
+Unlike a simple scan of files in their current state, the tool analyzes the repository's entire Git history by default. This is motivated by a fundamental property of Git discussed in Section~3.1.1: a commit is a snapshot of the project at a given point in time, and removing a line in a later commit does not erase it from earlier commits.
+
+The implementation relies on the \texttt{GitPython} library, which provides local access to the repository's internal structure without requiring any network calls. Traversal proceeds commit by commit, from oldest to newest, excluding the repository's very first commit --- which has no parent commit, and therefore no computable diff. For each commit, the tool computes the diff against its parent commit, then isolates only the added lines, excluding removed or context lines.
+
+This capability was explicitly validated (Section~6.4): a secret added and later removed in a subsequent commit remains correctly detected by the tool, attributed to its introducing commit.
+
+\subsubsection{Current-State (HEAD) Scanning}
+
+Reviewing the history-walking logic surfaced a genuine correctness gap: because the very first commit of any repository has no parent to diff against, a secret introduced only in that first commit and never touched again would be invisible to history-walking alone. To close this gap, a complementary current-state scan reads every file in the repository's working tree at \texttt{HEAD} directly, independent of commit history, and runs the same detection logic against each line.
+
+This addition runs by default alongside history-walking (an opt-out \texttt{--history-only} flag is available for users who prefer the narrower, faster behavior). The two passes are merged and deduplicated so that a secret caught by both is reported only once. The fix was validated with a minimal, purpose-built one-commit repository containing a single AWS credential: history-walking alone found zero findings (reproducing the exact blind spot), while the default combined mode correctly found the credential (Section~6.4).
+
+\subsubsection{Pattern-Based Detection (Regex)}
+
+Regex-based detection relies on Secrets-Patterns-DB~\cite{secretspatternsdb}. The source file (\texttt{rules-stable.yml}) contains 1,610 rules in total, each tagged with a confidence level (\texttt{high} or \texttt{low}). After filtering --- keeping only \texttt{high}-confidence rules --- 883 patterns remain usable by the tool.
+
+An analysis of this library's coverage confirms its relevance for a real-world secrets detection context. It notably covers major cloud providers (AWS, Google Cloud Platform), version control platforms (GitHub, GitLab), collaboration tools (Slack), payment services (Stripe), generic cryptographic keys (RSA, SSH, PGP), and --- confirmed during testing, Section~6.2 --- credentials embedded in database connection strings (via the \texttt{Password in URL} rule). This diversity directly overlaps with the categories most frequently involved in real-world leaks according to the GitGuardian 2026 report cited in Section~1.1. A quantified comparison against GitHub's own officially-recognized secret-scanning partner providers is presented in Section~6.10.
+
+A notable implementation detail confirmed during testing: a single logical secret type is frequently represented by \emph{several} differently-named rules within the library. GitHub tokens alone are covered by exactly a dozen distinct \texttt{high}-confidence rule names (e.g.\ \texttt{github\_token}, \texttt{Github Personal Access Token}, \texttt{Github App Token}), each matching a slightly different token format. This has a direct consequence on the verification stage (Section~5.2.1), which must map many rule names to a single verifier function rather than assuming a one-to-one relationship between pattern name and secret type. One of these twelve names, \texttt{env\_github\_oauth\_token}, was not registered in the verifier dispatcher during implementation and consequently falls back to \texttt{unverifiable} rather than being actively verified like its eleven siblings --- a minor, identified coverage gap rather than a deliberate exclusion (unlike, for example, the low-confidence GitLab patterns excluded by design in Section~5.2.1.5).
+
+To provide transparency on detection reliability, every finding is tagged with the mechanism that produced it (\texttt{regex} or \texttt{entropy}) and this split is surfaced in the scan summary, since entropy-only findings carry a measurably higher false-positive risk (Section~6.9.3).
+
+\subsubsection{Entropy-Based Detection}
+
+As a complement to regex-based detection, the tool incorporates Shannon entropy detection, aimed at catching generic secrets that match no known pattern. A threshold of 4.0 was selected as the detection criterion.
+
+A limitation was identified during testing: computing entropy on the entire line of code --- rather than on the value that could actually be a secret --- generates false positives on unrelated code (variable declarations, configuration syntax). Detection was consequently restricted to values enclosed in quotation marks within each line. This correction, along with its measured impact, is detailed in Section~6.2.
+
+\subsubsection{False Positive Filtering}
+
+A complementary keyword-based exclusion filter reduces the number of false positives generated by both detection mechanisms above. This filter compares the relevant line against a list of common markers associated with clearly fictitious or non-functional values --- namely \texttt{example}, \texttt{test}, \texttt{dummy}, \texttt{placeholder}, \texttt{your\_key\_here}, \texttt{xxxx}.
+
+This approach is deliberately simple and carries an acknowledged limitation, observed concretely during testing with the key \texttt{AKIAIOSFODNN7EXAMPLE} --- AWS's own officially documented example key (Section~6.3). The same limitation resurfaced repeatedly when constructing additional test cases across GitHub, Stripe, and database-URL scenarios, and is discussed as a general methodological lesson in Section~6.13.
+
+The filter was validated in isolation via a dedicated test script, and again during the full pipeline run.
+
+\subsection{Phase 2 --- Verification and Scoring}
+
+\subsubsection{Active Secret Verification}
+
+Following detection, each finding is passed to a verification stage that attempts to determine whether the underlying secret is genuinely active. The implementation follows a dispatcher pattern: a \texttt{VERIFIERS} dictionary maps pattern names to a provider-specific verification function, and a single \texttt{verify\_secret()} entry point looks up and calls the appropriate function, defaulting to \texttt{unverifiable} for any pattern with no registered verifier --- matching the real-world behavior of reference tools such as TruffleHog, which likewise verify only a subset of the secret types they detect.
+
+Ten independent verifiers were implemented and validated against live, real-world APIs, plus one additional secret type (Shopify) deliberately routed to an explicitly-documented non-verifiable path rather than a forced or fabricated check.
+
+\paragraph{AWS Credential Verification and Pairing.}
+Verified via \texttt{boto3} and the STS \texttt{get\_caller\_identity} call, chosen specifically because it requires no IAM permissions to invoke and performs no action on any account resource. Because AWS credentials consist of two separate values (an Access Key ID and a Secret Access Key), a pairing step associates findings occurring within the same commit and file before attempting verification. This pairing is a proximity heuristic, not a guarantee, and was itself refined during external testing (Section~6.9.1) after real-world data revealed that candidate secret keys are not always caught by the generic entropy detector, but sometimes by a specifically-named pattern (e.g.\ \texttt{AWS cred file info}); the candidate-matching logic was broadened accordingly.
+
+\paragraph{GitHub Token Verification.}
+Verified via a direct HTTP call to the authenticated \texttt{/user} REST endpoint --- GitHub's own documented entry point for confirming a token's validity. A fake token correctly returns \texttt{dead} (HTTP 401).
+
+\paragraph{Slack Token Verification.}
+Verified via the \texttt{auth.test} endpoint, purpose-built by Slack specifically for token validation rather than repurposed from a data-bearing endpoint. The response body's \texttt{ok}/\texttt{error} fields are checked directly, since Slack's API can return HTTP 200 even for a logically failed authentication. A fake token correctly returns \texttt{dead}.
+
+\paragraph{Stripe Key Verification.}
+Verified via a \texttt{GET} request to \texttt{/v1/balance}, using HTTP Basic Authentication with the API key as the username, per Stripe's standard authentication scheme. A response of \texttt{200} indicates \texttt{live}; \texttt{401} indicates \texttt{dead}. A fake key correctly returns \texttt{dead}, with the corresponding findings' severity subsequently downgraded from High to Low by the scoring override described in Section~5.2.2.
+
+\paragraph{GitLab Token Verification.}
+Verified via GitLab's \texttt{/user} REST endpoint using a \texttt{PRIVATE-TOKEN} header, structurally identical to the GitHub approach. Only the high-confidence pattern \texttt{Gitlabv2} was registered; lower-confidence GitLab-related patterns (\texttt{Gitlab}, \texttt{gitlab\_user\_email}) were deliberately excluded, consistent with the confidence-filtering policy applied throughout detection (Section~5.1.3). A fake token correctly returns \texttt{dead}.
+
+\paragraph{Discord Bot Token and Webhook Verification.}
+Discord requires two distinct verification methods for two structurally different secret types it exposes: bot tokens (verified via the authenticated \texttt{/users/@me} endpoint, mirroring GitHub/GitLab) and webhooks (self-contained URLs verified by a direct \texttt{GET} request to the webhook URL itself, since a webhook is not a bearer token attached to a fixed endpoint). An initial implementation incorrectly routed both secret types through the bot-token method; this was identified and corrected before being treated as validated, splitting the logic into \texttt{verify\_discord\_bot\_token()} and \texttt{verify\_discord\_webhook()}, each independently tested and confirmed against fabricated credentials.
+
+\paragraph{Dropbox Token Verification.}
+Verified via a \texttt{POST} request (rather than \texttt{GET}, unlike every other verifier in this project) to \texttt{/2/users/get\_current\_account}, using a Bearer-token \texttt{Authorization} header per Dropbox's documented authentication scheme. A fake token correctly returns \texttt{dead}.
+
+\paragraph{Mailchimp Key Verification.}
+Mailchimp API keys encode their account's data center as a suffix (e.g.\ \texttt{-us21}), requiring the verification endpoint's hostname to be constructed dynamically from the key itself rather than using one fixed URL. The implementation extracts this suffix and validates its format before attempting a request, falling back to \texttt{unverifiable} rather than guessing if the key is malformed. Verification then uses \texttt{/3.0/ping}, an endpoint purpose-built by Mailchimp specifically for validity checking (the same category as Slack's \texttt{auth.test}). A fake key correctly returns \texttt{dead}.
+
+\paragraph{Google API Key Verification.}
+The pattern library contains 8 distinct Google-related high-confidence patterns, covering several structurally different credential types (API keys, OAuth access tokens, a service account key, client ID/secret, and a Calendar URI pattern). Only the two patterns corresponding to simple, self-contained API keys (\texttt{Google API Key}, \texttt{google\_maps\_api\_key}) were registered for verification, via Google's API Discovery Service (\texttt{/discovery/v1/apis}), a low-privilege, read-only endpoint that succeeds for any valid key regardless of which specific Google services it is scoped to. OAuth tokens, the service account key, and client secrets were deliberately left unregistered rather than force-fit into the same verification method, since they require fundamentally different mechanisms (token introspection, JWT signing) outside this project's scope. A fake key correctly returns \texttt{dead}.
+
+\paragraph{Shopify: A Documented Non-Verifiable Case.}
+Shopify's API is scoped per shop, requiring a shop domain (e.g.\ \texttt{my-shop.myshopify.com}) alongside the API key to construct any valid request --- a value the detection stage does not capture, unlike AWS's two-part credential, which is handled through the pairing mechanism described in Section~5.2.1.1. Rather than guessing, hardcoding, or fabricating a shop domain to force a live check, \texttt{verify\_shopify\_key()} unconditionally returns \texttt{unverifiable}, with its docstring explicitly documenting why. All four high-confidence Shopify pattern names are routed through this function, so Shopify findings are explicitly and traceably marked as structurally non-verifiable, rather than silently falling through the dispatcher's generic default with no explanation. This case illustrates a deliberate methodological choice: declining to fabricate a verification result was treated as more important than inflating the count of ``verified'' providers.
+
+All ten working verifiers, plus the explicitly-documented Shopify case, were tested first in isolation against fabricated credentials, then integrated into the full pipeline and re-validated end-to-end. Findings for which no verifier exists (private keys, generic entropy findings, database connection strings) correctly fall back to \texttt{unverifiable} without disrupting the pipeline.
+
+\subsubsection{Criticality Scoring Model}
+
+\paragraph{Type and Verification Weighting.}
+The scoring module combines two independent factors into a single numeric score: a base weight assigned per secret type (e.g.\ 40 points for AWS credentials, reflecting broad account-level impact; 35 points for Stripe and cryptographic keys; 30 points for developer platform tokens and database connection strings; 15 points as a default for unclassified or generic findings), and a weight assigned per verification status (40 points for \texttt{live}, 15 points for \texttt{unverifiable}, 0 points for \texttt{dead}). The resulting total is mapped to one of four severity levels --- Critical, High, Medium, Low --- via fixed thresholds.
+
+Two explicit override rules sit on top of the additive score: a finding confirmed \texttt{dead} is always downgraded to \texttt{Low} severity regardless of its type weight; conversely, a finding confirmed \texttt{live} is never assigned a severity below \texttt{High}. The deliberate non-zero weight given to \texttt{unverifiable} findings (15 points, rather than 0) reflects a design principle established prior to implementation: the absence of verification is not equivalent to confirmed safety, and should not be scored as though it were.
+
+\paragraph{File-Path Context Penalty.}
+Inspired by \texttt{org-secret-scan}'s context-aware scoring (Section~3.4.4), a 30-point penalty is subtracted (floored at zero) whenever a finding's file path contains \texttt{test}, \texttt{docs}, \texttt{example}, or \texttt{spec}, reflecting the reduced real-world risk of a secret sitting in a non-production location. This mechanism was validated both in an isolated unit test and, subsequently, against real external data (Section~6.9.3), where it correctly downgraded a deliberately-placed demo secret located in a file whose path contained \texttt{example}.
+
+The scoring logic was validated through a dedicated unit test suite, following a methodology comparable to that used by \texttt{org-secret-scan}~\cite{orgsecretscan}, asserting expected severity outcomes for known input combinations.
+
+\subsection{Phase 3 --- Remediation Pipeline}
+
+\subsubsection{Remediation Advice Templates}
+
+For each secret category the tool actively verifies (AWS, GitHub, Slack, Stripe) plus a generic fallback, a static remediation template provides three pieces of actionable guidance: a numbered list of immediate actions (e.g.\ rolling the key, reviewing access logs), a one-line rotation-guidance summary, and a link to the relevant provider's official documentation. A finding's raw pattern name is mapped to the correct template category through case-insensitive keyword matching (e.g.\ any pattern name containing ``stripe'' routes to the Stripe template), mirroring the same many-to-one mapping challenge already solved for verification (Section~5.2.1).
+
+\subsubsection{Severity-Based Action Routing}
+
+Each finding is routed to one of three actions based on its final severity: Critical or High severity triggers \texttt{alert\_and\_advise} (the finding is flagged for immediate attention and the relevant remediation template is attached); Medium severity triggers \texttt{logged\_for\_digest} (recorded for periodic review, not urgent); Low severity triggers \texttt{logged\_only} (recorded for completeness). This mirrors the routing principle established conceptually early in the project design: automation is reserved for cases where confidence is high, while lower-confidence or lower-risk findings are simply recorded rather than acted upon.
+
+\subsubsection{Structured JSON Reporting}
+
+Every finding, having passed through detection, verification, scoring, and remediation routing, is serialized into a structured JSON report (\texttt{reports/findings.json}) containing a generation timestamp, the total finding count, and the complete set of individual findings and AWS credential pairs --- each carrying its type, location, verification status, score, severity, remediation action, and attached advice where applicable. This report format is the machine-readable analogue of the terminal output described in Section~5.5, suitable for ingestion by other tooling.
+
+\subsection{Current-State Presence Tracking}
+
+To distinguish secrets that remain immediately discoverable from those only reachable through deliberate history inspection, each finding is checked against the repository's current \texttt{HEAD} state: if the same file still exists and still contains the matched value, the finding is tagged \texttt{still\_present: true}; otherwise, \texttt{false}. This check is informational only and does not influence scoring or remediation routing. Validated against the project's own test dataset, exactly one finding --- the credential deliberately added and later removed to test history-scanning (Section~6.4) --- was correctly tagged as no longer present, while every other finding in the 43-finding dataset was correctly tagged as still present.
+
+\subsection{Command-Line Interface Implementation}
+
+The CLI (\texttt{main.py}) orchestrates the full pipeline behind six flags: \texttt{--path} or \texttt{--url} to select the scan target (mutually exclusive, one required), \texttt{--history-only} to opt out of current-state scanning, \texttt{--min-confidence} and \texttt{--patterns} to control which pattern rules are loaded, and \texttt{--baseline} to enable incremental scanning. Output is restructured into a single, fully-resolved pass per finding --- rather than printing partial information at each pipeline stage separately --- grouped by severity, with color-coded severity tags (bright red for Critical, red for High, yellow for Medium, green for Low) for terminal readability, preceded by a startup banner and a live progress indicator during the scanning phase. A summary block precedes the detailed findings, reporting the repository scanned, pattern count, scan mode, detection-method breakdown, severity breakdown, and verification breakdown.
+
+\subsection{Incremental/Baseline Scanning}
+
+To more directly satisfy the \emph{continuous} scanning framing of the project subject, an opt-in \texttt{--baseline} mode allows successive scans of the same repository to report only newly-introduced findings rather than the full result set every time. Each finding is reduced to a stable identifier (a truncated SHA-256 hash of its type, file, commit, and matched value --- or, for AWS pairs, the access key and secret key together), and the current scan's set of identifiers is compared against a locally-stored record of the previous scan's identifiers for the same repository (keyed by a hash of the \texttt{--path}/\texttt{--url} value, stored under \texttt{baselines/}). Findings whose identifier was not present in the previous scan are reported in full; findings that were already seen are counted but not repeated in detail. After each run, the current complete set of identifiers is saved as the new baseline for the next comparison.
+
+This was validated with a controlled before/after sequence against the fixture repository: an initial scan with no prior baseline correctly reported all findings as new and created a baseline file; an immediate second scan of the identical, unchanged repository correctly reported zero new findings, with all previously-seen findings suppressed from the detailed output and counted only in the summary. Running without \texttt{--baseline} was confirmed to leave baseline files untouched and behave identically to the tool's original, non-incremental output.
+
+\newpage
+
+
+% ============================================================
+%  6. RESULTS AND EVALUATION
+% ============================================================
+\section{Results and Evaluation}
+
+\subsection{Test Dataset}
+
+Testing was carried out on a combined repository merging two sources: the public repository \emph{fake-public-secrets}~\cite{fakepublicsecrets} (15 commits containing fake credentials in varied formats --- Terraform files, CI configuration, an AWS credentials file, a PDF), and a series of custom commits added specifically to validate precise mechanisms of the detection and verification engines --- an AWS-format key pair, a random session token, an explicit placeholder value, a database connection string, and single tokens for GitHub, Slack, and Stripe. This combined repository, publicly hosted, was used to validate the tool via both direct local path scanning and the \texttt{--url} remote-cloning mode. Beyond this primary fixture, three independent external repositories --- never modified or tailored to this tool --- were used for additional validation (Section~6.9).
+
+\subsection{Measured Outcomes Summary}
+
+Table~\ref{tab:measured-outcomes} summarizes the verification methodology applied throughout this project, following a denominator-preserving reporting style consistent with each individual mechanism's validation.
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.30\textwidth}|c|Y|}
+\hline
+\textbf{Measured control} & \textbf{Result} & \textbf{Interpretation} \\
+\hline
+Isolated verifier tests (during development) & 10/10 pass & Every implemented verifier (AWS, GitHub, Slack, Stripe, GitLab, Discord bot, Discord webhook, Dropbox, Mailchimp, Google) was individually confirmed to return \texttt{dead} against a fabricated credential during development, before integration. Standalone scripts for this purpose exist in the project's history for 7 of the 10 providers; AWS, GitHub, and Slack were validated the same way but via ad hoc scripts not preserved in the repository. \\
+Automated unit test suite (current) & 20/20 pass & \texttt{tests/test\_scoring.py} and \texttt{tests/test\_remediation.py}, runnable via \texttt{python -m pytest tests/ -v}, currently provide the project's durable, reproducible automated test coverage. \\
+Full pipeline reruns after incremental changes & 10+ runs, 0 regressions & Every scoring, verification, and output-formatting change was followed by a full end-to-end scan confirming no unintended side effects on prior results. \\
+Severity / verification cross-consistency & 43/43 & Severity breakdown (Critical + High + Medium + Low) and verification breakdown (Live + Dead + Unverifiable) each independently summed to the total finding count on every measured run. \\
+External repository validations & 3/3 completed & Each of the three independent, unmodified external repositories surfaced a distinct, real finding (a live credential, a pairing limitation, and a false-positive confirmation). \\
+\texttt{still\_present} tagging accuracy & 43/43 correct & Exactly one finding --- the deliberately added-then-removed test credential --- was tagged \texttt{false}; every other finding was correctly tagged \texttt{true}. \\
+History-gap correctness fix & 1/1 reproduced and resolved & A minimal, purpose-built one-commit repository confirmed the exact first-commit blind spot before the fix, and confirmed its resolution after. \\
+\hline
+\end{tabularx}
+\caption{Summary of verification methodology applied across the project.}
+\label{tab:measured-outcomes}
+\end{table}
+
+These results do not claim exhaustive correctness across all possible inputs. They demonstrate that each mechanism introduced during development was verified against a concrete, reproducible test before being treated as validated --- the same discipline applied consistently from the first detection test through the final external repository scan.
+
+\subsection{Initial Scan and Iterative Corrections}
+
+An initial full scan of the repository produced 85 findings. Manual analysis identified two concrete limitations of the detection engine, corrected iteratively:
+
+\begin{enumerate}
+    \item \textbf{Entropy scope too broad} --- entropy was initially computed on the entire line rather than on the value actually likely to be a secret. The fix --- restricting entropy computation to quoted values only --- reduced the result count to 71.
+    \item \textbf{No deduplication} --- a single secret value triggered multiple distinct findings when it matched several patterns in the library. Adding deduplication by exact value reduced the result count to 33.
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.24\textwidth}|c|Y|}
+\hline
+\textbf{Stage} & \textbf{Findings} & \textbf{Correction applied} \\
+\hline
+Initial scan & 85 & --- \\
+After entropy fix & 71 & Entropy restricted to quoted values \\
+After deduplication & 33 & One finding per unique secret value \\
+Final dataset (post history-validation \& additional test cases) & 43 & Includes GitHub/Slack/Stripe/DB-URL cases and the history-validation pair \\
+\hline
+\end{tabularx}
+\caption{Result count across successive correction iterations and dataset extensions.}
+\label{tab:iterations}
+\end{table}
+
+\subsection{False Positive Filtering Validation}
+
+The keyword-based exclusion filter was validated both in isolation and during the full scan. A notable case was observed: the key \texttt{AKIAIOSFODNN7EXAMPLE} --- AWS's own officially documented example key --- was correctly excluded from the results. This required replacing this key with a non-filtered fake value (\texttt{AKIAJAA49FFSFRFN6ZZZ}) to distinctly validate the history-scanning mechanism (Section~6.4). The same issue recurred when adding GitHub, Stripe, and database-URL test cases: initial fake values built using words such as \texttt{test}, \texttt{fake}, and \texttt{example} were themselves filtered out, requiring a second iteration of "clean" fake values to properly exercise detection and verification (Section~6.13).
+
+\subsection{Git History Scanning Validation}
+\label{subsec:history-validation}
+
+The history-scanning mechanism was explicitly validated. The fake key \texttt{AKIAJAA49FFSFRFN6ZZZ} was added in a first commit, then removed from the file in a later commit. The scan results confirm that this key remains detected, attributed to the commit where it was introduced, despite being absent from the file's current state --- and is the sole finding, out of 43, correctly tagged \texttt{still\_present: false} (Section~5.4).
+
+The complementary current-state scanning gap (Section~5.1.2) was validated separately using a minimal, purpose-built one-commit repository containing a single AWS credential and nothing else: running with \texttt{--history-only} produced zero findings (reproducing the exact blind spot, since the repository's only commit has no parent to diff against), while the default combined mode correctly found the credential, tagged \texttt{still\_present: true}.
+
+\subsection{Verification Validation}
+
+Verification was validated against live provider APIs across ten independent secret types, plus one deliberately non-verifiable case, summarized in Table~\ref{tab:verification-results}. Because the fixture repository continued to receive additional validation commits throughout development (Section~6.1), exact AWS pairing counts reflect the dataset's state at the time of the most recent full pipeline run rather than a single frozen snapshot; the proportion of successfully paired versus correctly-unverifiable findings remained consistent throughout.
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.13\textwidth}|p{0.30\textwidth}|Y|}
+\hline
+\textbf{Provider} & \textbf{Mechanism} & \textbf{Result} \\
+\hline
+AWS & STS \texttt{get\_caller\_identity}, paired credentials & 10/19 paired and verified \texttt{dead}; 9 correctly \texttt{unverifiable} (no co-located candidate) \\
+GitHub & REST \texttt{/user} endpoint & \texttt{dead}, confirmed via live API call \\
+Slack & \texttt{auth.test} endpoint & \texttt{dead}, confirmed via live API call \\
+Stripe & \texttt{/v1/balance} endpoint & \texttt{dead}, confirmed via live API call; severity downgraded High$\to$Low accordingly \\
+GitLab & REST \texttt{/user} endpoint & \texttt{dead}, confirmed via live API call \\
+Discord (bot token) & REST \texttt{/users/@me} endpoint & \texttt{dead}, confirmed via live API call \\
+Discord (webhook) & Direct request to webhook URL & \texttt{dead}, confirmed via live API call; corrected from an initial mis-implementation (Section~5.2.1.6) \\
+Dropbox & \texttt{POST /2/users/get\_current\_account} & \texttt{dead}, confirmed via live API call \\
+Mailchimp & \texttt{/3.0/ping} (data-center-aware URL) & \texttt{dead}, confirmed via live API call \\
+Google & API Discovery Service & \texttt{dead}, confirmed via live API call \\
+Shopify & N/A --- structurally non-verifiable & \texttt{unverifiable} by explicit design (Section~5.2.1.10), not a failed attempt \\
+\hline
+\end{tabularx}
+\caption{Verification results by provider, against fabricated test credentials.}
+\label{tab:verification-results}
+\end{table}
+
+Private keys, generic entropy findings, and remaining database connection strings correctly fell back to \texttt{unverifiable}, no verifier having been implemented for these types --- consistent with the partial-verification behavior documented for TruffleHog itself in Section~1.2.
+
+\subsection{Scoring Engine in Practice}
+
+Running the completed scoring engine, including the file-path context penalty, against the 43-finding dataset produced zero Critical findings, 12 High, 17 Medium, and 14 Low. The absence of any Critical result is an expected and correct outcome rather than a shortfall: reaching the Critical threshold requires a \texttt{live} verification status combined with a high-weight secret type, and since every credential in the controlled test dataset is fabricated (Section~1.4), no finding was ever confirmed genuinely active. This behavior was later contrasted directly against a genuine live finding obtained during external validation (Section~6.9.1), confirming the Critical tier functions correctly when a truly active credential is encountered.
+
+\subsection{Remediation Pipeline Validation}
+
+The remediation stage was validated end-to-end against the full 43-finding dataset. Every High-severity finding correctly received \texttt{alert\_and\_advise} status together with its category-appropriate remediation template (verified explicitly for a Stripe finding: three numbered immediate actions, rotation guidance, and a link to Stripe's official key-rolling documentation); Medium-severity findings correctly received \texttt{logged\_for\_digest}; Low-severity findings correctly received \texttt{logged\_only}. The resulting \texttt{reports/findings.json} was confirmed to contain valid, complete records for all findings and AWS pairs, including their attached remediation advice where applicable.
+
+\subsection{Remote Scanning Validation}
+
+The \texttt{--url} CLI mode was validated by scanning the original, unmodified \emph{fake-public-secrets} upstream repository --- a dataset the tool had not been tailored against. The tool correctly cloned the repository into a temporary directory, executed the identical detection, verification, and pairing pipeline used for local scans, produced 32 findings (consistent with the absence of the custom validation commits present only in the extended fork), and removed the temporary directory automatically upon completion.
+
+\subsection{External Repository Validation}
+
+Beyond the project's own fixture data, three independent, publicly available repositories --- none modified or tailored to this tool --- were scanned to validate genericity and surface real-world edge cases not present in controlled test data.
+
+\subsubsection{trufflesecurity/test\_keys --- Live Credential Discovery}
+
+TruffleHog's own officially-maintained test repository was scanned via \texttt{--url}. The tool correctly detected an SSH private key and an AWS credential pair. Initial pairing failed to match the Secret Access Key, which was caught by a specifically-named pattern (\texttt{AWS cred file info}) rather than the generic entropy fallback the pairing logic originally checked for exclusively; this real-world discovery led directly to broadening the candidate-matching logic in Section~5.2.1.1. After the fix, the pair was correctly matched and verified: the STS call returned \texttt{live} against a real, intentionally-maintained AWS canary credential, and the finding correctly escalated to \texttt{Critical} severity (score 80) --- the only Critical-severity result obtained anywhere in this project, and the first end-to-end confirmation of the scoring model's live-verification override operating on genuinely live infrastructure rather than fabricated data.
+
+\subsubsection{codacy-security/sample\_secrets --- Multi-Value Pairing Limitation}
+
+This repository, maintained within the GitGuardian ecosystem for scanner validation, exposed a distinct limitation: a single line of code (\texttt{database = aws\_lib.connect("AKIA...", "secret...")}) contained both an AWS Access Key ID and its Secret Access Key as two separate quoted values. Because the tool's value-extraction logic returns only the first quoted value on a line regardless of which specific value triggered a given finding, the pairing mechanism incorrectly paired the access key with itself. This is documented as a known limitation (Section~6.12) rather than corrected, since a proper fix would require storing each finding's specific triggering substring at detection time rather than the full raw line --- a non-trivial structural change judged out of scope given remaining project time.
+
+\subsubsection{crow50/gitleaks-secret-scanning --- False Positive Behavior and Path-Penalty Confirmation}
+
+This repository, built as a DevSecOps course demonstration, contained no credentials matching any regex pattern; all seven findings were entropy-only (a README badge URL, an f-string, and a demo-token assignment), confirming that entropy-only findings correlate with lower real-world reliability, consistent with the detection-method transparency feature described in Section~5.1.3. Critically, every finding remained correctly capped at Medium or Low severity despite being largely false positives, demonstrating that the scoring layer correctly deprioritizes noise rather than trusting detection blindly. This scan also provided the first real-data confirmation of the file-path context penalty (Section~5.2.2.2): the repository's one deliberately-planted demo secret, located in a file named \texttt{secrets-example.py}, was correctly downgraded to a score of zero due to the word ``example'' in its path.
+
+\subsection{Pattern Library Coverage Validation}
+
+To quantify the pattern library's real-world relevance beyond the providers this project actively verifies, its coverage was checked against GitHub's own officially-recognized secret-scanning partner providers~\cite{githubpartners}. Of 34 provider categories GitHub lists, 22 (65\%) are represented by at least one high-confidence pattern in the library used by this tool, including all four providers actively verified by this project (AWS, GitHub, Slack, Stripe). Notable uncovered categories include Azure, HashiCorp Vault, npm, and Twilio --- documented as a coverage gap rather than corrected, since the pattern library is treated as an external, curated dependency rather than something extended within this project's scope.
+
+\subsection{Comparative Evaluation}
+
+\subsubsection{Positioning Against TruffleHog and GitLeaks/Betterleaks}
+
+TruffleHog remains the closest large-scale reference in terms of raw detection breadth (800+ built-in patterns versus the 883 curated from Secrets-Patterns-DB used here) and partial verification coverage. The emergence of Betterleaks in 2026 as GitLeaks' direct successor --- explicitly combining detection with live validation in its open-source tier --- independently validates the detect-then-verify architecture pursued throughout this project, rather than undermining its novelty: both this project and a major, separately-developed open-source tool converged on the same architectural conclusion.
+
+\subsubsection{Positioning Against org-secret-scan}
+
+\texttt{org-secret-scan} remains the closest architectural match to this project among smaller-scale open-source tools, sharing the same regex/entropy/context/denylist detection shape and a comparable context-aware scoring philosophy (Section~5.2.2.2). Two meaningful differences distinguish the two projects: \texttt{org-secret-scan} offers no active verification of any kind, by explicit ethical design choice documented in its own README, whereas this project implements and validates ten working verifiers against live provider APIs, including a genuine live-secret confirmation (Section~6.9.1); conversely, \texttt{org-secret-scan} provides broader operational scaffolding (organization-wide GitHub scanning, SARIF export, incremental baseline scanning, git-blame attribution) that falls outside this project's declared scope (Section~1.4).
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.34\textwidth}|Y|}
+\hline
+\textbf{Tool} & \textbf{Main strength} & \textbf{Difference from this project} \\
+\hline
+TruffleHog & Mature, widely-adopted Go scanner; 800+ built-in patterns; partial verification. & This project curates a larger external pattern library (883 patterns) and independently arrives at the same detect-verify architecture, extended with scoring and remediation. \\
+GitLeaks / Betterleaks & Fast, lightweight, large community; Betterleaks (2026) adds live validation. & Betterleaks's emergence validates this project's core detect-then-verify design choice, made independently. \\
+Secrets-Patterns-DB & Large, actively-maintained pattern database (1,600+ rules). & Used directly as this project's detection library rather than a competing tool. \\
+org-secret-scan (GSS) & Closest architectural match; context-aware scoring; broad remediation guidance; org-scale scanning. & This project adds live verification (10 providers) that GSS deliberately excludes; GSS offers scale features (SARIF, org-wide scan) outside this project's scope. \\
+Commercial platforms & Organization-wide dashboards, SIEM integration, workflow automation. & Confirm the three-stage architecture (detect/prioritize/remediate) is an industry-recognized pattern; out of reach for an internship-scale prototype. \\
+\hline
+\end{tabularx}
+\caption{Positioning of this project's tool compared with existing solutions.}
+\label{tab:tool-positioning}
+\end{table}
+
+This comparison clarifies the project's actual contribution: not a replacement for any of these tools, but a demonstration that TruffleHog's detection foundation can be meaningfully extended along the four axes explicitly required by the project subject, at a scope appropriate for an internship timeline.
+
+\subsection{Identified Limitations}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.32\textwidth}|Y|}
+\hline
+\textbf{Gap} & \textbf{Consequence} \\
+\hline
+Exact-value deduplication does not merge partially overlapping matches. & Two different patterns matching slightly different substrings of the same secret continue to produce two distinct findings, as observed on private key headers in \texttt{BARE-SECRETS}. \\
+Binary file handling produces partially corrupted text upon decoding. & Files such as \texttt{mangled-secrets.pdf} can introduce minor inaccuracies in a displayed value, without preventing detection itself. \\
+AWS credential pairing is a same-commit/same-file proximity heuristic. & Does not guarantee correct pairing where credentials are split across unrelated files or commits, or where multiple quoted values share a single line (Section~6.9.2). \\
+Active verification covers ten of the 883 detectable pattern types. & Mirrors the partial-verification behavior of established reference tools rather than representing a shortfall specific to this project. \\
+\hline
+\end{tabularx}
+\caption{Common gaps identified during implementation and testing.}
+\label{tab:identified-gaps}
+\end{table}
+
+\subsection{Threats to Validity}
+
+\subsubsection*{Internal Validity}
+
+Verification results depend on the real-time behavior of external provider APIs, which is outside this project's control. A provider changing its authentication error codes, rate-limiting behavior, or endpoint availability between testing and any later re-run could alter results without any change to the tool itself. Network conditions and timeouts can also cause a genuinely \texttt{live} or \texttt{dead} credential to be misclassified as \texttt{unverifiable}, which is the safer failure mode by design (Section~5.2.1) but is nonetheless a source of measurement variance not fully controlled for.
+
+\subsubsection*{External Validity}
+
+Validation beyond the project's own fixture data was limited to three external repositories (Section~6.9), none at organizational scale and none representative of a large, actively-maintained production codebase with thousands of commits and contributors. The genuinely live credential encountered during testing (Section~6.9.1) was a single, intentionally-maintained canary token rather than a sample of real-world live-secret prevalence. Conclusions about detection and verification behavior on arbitrary, large-scale, real-world repositories should therefore be drawn cautiously from this evaluation.
+
+\subsubsection*{Construct Validity}
+
+The criticality scoring thresholds and factor weights (Section~5.2.2) reflect deliberate design choices informed by conceptual reasoning and cross-referenced against a comparable open-source project's approach (Section~3.4.4), rather than calibration against a labeled ground-truth dataset of confirmed real-world breaches. No formal precision/recall benchmark was performed, since doing so would require either fabricated ground truth (of limited external validity) or exposure to real secrets (excluded from this project's scope on ethical grounds, Section~1.4). This evaluation therefore supports claims about the tool's internal consistency, mechanism correctness, and behavioral soundness more strongly than it supports claims about optimal scoring calibration against real-world incident data.
+
+\subsection{Methodological Note on Test Data Construction}
+
+An unanticipated but recurring finding across testing was that fabricated test secrets built using common placeholder vocabulary (\texttt{example}, \texttt{test}, \texttt{fake}) are themselves excluded by the tool's own false-positive filter --- observed first with AWS's documented example key, then again independently while constructing GitHub, Stripe, and database-URL test cases. This is documented here as a methodological lesson for constructing secrets-scanner test fixtures generally: test values must avoid the scanner's own exclusion vocabulary, or the resulting test inadvertently exercises the false-positive filter rather than the detection mechanism under test.
+
+\newpage
+
+% ============================================================
+%  7. CONCLUSION AND PERSPECTIVES
+% ============================================================
+\section{Conclusion and Perspectives}
+
+\subsection{Recap of Objectives and Achievements}
+
+All technical objectives stated in Section~1.3 were met: a detection engine combining regex and entropy analysis was built and iteratively debugged against real test data; active verification was implemented and validated against ten independent, live provider APIs rather than the three originally targeted, plus one additional case (Shopify) explicitly documented as structurally non-verifiable rather than left unexplained; a criticality scoring model incorporating both verification status and file-path context was implemented and unit-tested; and the tool was exposed as a command-line utility supporting local, remote, and history-only scanning modes. The evaluation objectives were likewise met and exceeded: beyond the combined fixture dataset, the tool was validated against three independent, unmodified external repositories, each surfacing a distinct real-world finding --- a genuine live-secret detection, a documented pairing limitation, and confirmation of the scoring layer's noise-suppression behavior.
+
+\subsection{Main Contributions of the Project}
+
+The principal contribution is a working, end-to-end demonstration that TruffleHog's detection foundation can be meaningfully extended along the four axes named in the project subject --- reduced false positives, active verification, criticality scoring, and automated remediation --- without reimplementing secrets detection from first principles. Secondary contributions include: a reusable AWS credential-pairing mechanism refined through real-world testing; a criticality scoring model whose design principles (treating \texttt{unverifiable} as meaningfully distinct from confirmed-safe, and incorporating file-path context) were validated against actual scan data rather than only in theory; and a quantified, citable comparison of the tool's pattern coverage against GitHub's own officially-recognized provider list.
+
+\subsection{Challenges Faced and Solutions}
+
+Several concrete technical challenges were encountered and resolved during development. Windows/PowerShell encoding issues (UTF-16/BOM) initially caused Git to treat plain-text test files as binary, silently preventing diff generation; this was resolved by ensuring all test fixtures were authored in clean UTF-8. The project's own false-positive filter repeatedly interacted with test values chosen for convenience --- most notably AWS's own documented example key, and later several custom GitHub, Stripe, and database-URL test values --- requiring deliberate reconstruction of test data using vocabulary the filter itself would not exclude. Detection-side bugs (entropy computed over entire lines rather than isolated values, and absent deduplication) were identified through iterative real-data testing rather than anticipated in advance, and corrected across three measured stages (85 $\to$ 71 $\to$ 33 findings). Finally, external validation against \texttt{trufflesecurity/test\_keys} surfaced a genuine architectural gap in the AWS pairing logic --- invisible in controlled fixture data --- which was diagnosed and corrected only because testing extended beyond self-authored test data.
+
+\subsection{Future Work}
+
+Several directions were identified but placed outside this project's scope given time constraints. A pre-commit hook variant of the detection engine was considered and explicitly excluded from scope, since it addresses a fundamentally different operating model (local, per-developer, pre-commit-time prevention) already well-served by existing solutions such as GitHub push protection and the \texttt{pre-commit} framework, rather than this project's repository-auditing focus.
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.28\textwidth}|Y|}
+\hline
+\textbf{Improvement area} & \textbf{Planned improvement} \\
+\hline
+Verifier coverage & Implement remaining verifiers for pattern categories the library already detects (e.g.\ npm, Twilio, HashiCorp Vault, Azure). \\
+AWS pairing robustness & Resolve the multi-value-per-line limitation (Section~6.9.2) by storing each finding's specific triggering substring at detection time rather than the full raw line. \\
+Deduplication & Extend exact-value deduplication to merge partially overlapping pattern matches on the same underlying secret. \\
+CLI ergonomics & Package additional convenience features (e.g.\ shell auto-completion, a config file for default flags) now that the tool is installable as a standalone \texttt{secretscan} command (Section~5.6). \\
+Scoring calibration & Benchmark scoring thresholds against a labeled dataset, addressing the construct-validity limitation identified in Section~6.12. \\
+\hline
+\end{tabularx}
+\caption{Prioritized directions for future work.}
+\label{tab:future-work}
+\end{table}
+
+\newpage
+
+% ============================================================
+%  BIBLIOGRAPHY
+% ============================================================
+\section{Bibliography}
+
+\begin{thebibliography}{9}
+
+\bibitem{secretspatternsdb} mazen160, \emph{Secrets-Patterns-DB}, GitHub. \url{https://github.com/mazen160/secrets-patterns-db}
+
+\bibitem{fakepublicsecrets} atrull, \emph{fake-public-secrets}, GitHub. \url{https://github.com/atrull/fake-public-secrets}
+
+\bibitem{orgsecretscan} douglasmun, \emph{org-secret-scan}, GitHub. \url{https://github.com/douglasmun/org-secret-scan}
+
+\bibitem{testkeys} Truffle Security, \emph{test\_keys}, GitHub. \url{https://github.com/trufflesecurity/test_keys}
+
+\bibitem{samplesecrets} Codacy Security, \emph{sample\_secrets}, GitHub. \url{https://github.com/codacy-security/sample_secrets}
+
+\bibitem{gitleaksdemo} crow50, \emph{Gitleaks-Secret-Scanning}, GitHub. \url{https://github.com/crow50/gitleaks-secret-scanning}
+
+\bibitem{githubpartners} GitHub, \emph{Secret scanning partners}, GitHub Docs. \url{https://docs.github.com/en/code-security/secret-scanning/secret-scanning-partners}
+
+\end{thebibliography}
+
+\newpage
+
+% ============================================================
+%  ANNEXES
+% ============================================================
+\section*{Annex A: Installation Guide}
+\addcontentsline{toc}{section}{Annex A: Installation Guide}
+
+\begin{enumerate}
+    \item Clone the repository and create a Python virtual environment:
+    \begin{verbatim}
+git clone <repository-url>
+cd secret-scanner-pipeline
+python -m venv venv
+venv\Scripts\Activate.ps1   # Windows PowerShell
+    \end{verbatim}
+    \item Install the tool as an editable package (this reads \texttt{pyproject.toml} and installs both the project's dependencies and the \texttt{secretscan} console-script command):
+    \begin{verbatim}
+pip install -e .
+    \end{verbatim}
+    \item Ensure the pattern library is present at \texttt{config/rules-stable.yml} (bundled with the repository; sourced from Secrets-Patterns-DB~\cite{secretspatternsdb}).
+    \item Verify the installation:
+    \begin{verbatim}
+secretscan --help
+    \end{verbatim}
+    This should run from any directory, without needing to reference \texttt{python} or the project's path explicitly.
+\end{enumerate}
+
+\newpage
+
+\section*{Annex B: User Manual}
+\addcontentsline{toc}{section}{Annex B: User Manual}
+
+\textbf{Scanning a local repository:}
+\begin{verbatim}
+secretscan --path C:\path\to\repository
+\end{verbatim}
+
+\textbf{Scanning a remote repository by URL:}
+\begin{verbatim}
+secretscan --url https://github.com/user/repo
+\end{verbatim}
+
+\textbf{Skipping the current-state scan (history only, faster):}
+\begin{verbatim}
+secretscan --path C:\path\to\repository --history-only
+\end{verbatim}
+
+\textbf{Incremental scanning (report only new findings since the last scan):}
+\begin{verbatim}
+secretscan --path C:\path\to\repository --baseline
+\end{verbatim}
+The first run with \texttt{--baseline} establishes the baseline and reports every finding as new; subsequent runs against the same target report only newly-introduced findings, with previously-seen findings counted in the summary but omitted from detailed output.
+
+\textbf{Using a custom pattern file or confidence threshold:}
+\begin{verbatim}
+secretscan --path C:\path\to\repository --patterns custom.yml --min-confidence high
+\end{verbatim}
+
+\textbf{Interpreting the output:} findings are grouped by severity (Critical, High, Medium, Low), color-coded in the terminal. Each finding reports its type, file and commit, detection method, verification status, score, recommended remediation action, and whether the secret remains present in the repository's current state. A structured JSON report is written to \texttt{reports/findings.json} after every scan, containing the complete dataset including attached remediation advice for Critical/High findings.
+
+\end{document}

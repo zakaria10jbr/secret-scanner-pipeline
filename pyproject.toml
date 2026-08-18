@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secret-scanner-pipeline"
+version = "0.1.0"
+description = "Continuous secret-scanning tool with criticality scoring and automated remediation pipeline"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "gitpython",
+    "requests",
+    "python-dotenv",
+    "pyyaml",
+    "boto3",
+    "colorama",
+    "rich",
+]
+
+[project.scripts]
+secretscan = "main:main"
+
+[tool.setuptools]
+py-modules = ["main"]
+packages = ["scanner"]

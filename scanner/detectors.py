@@ -1,17 +1,47 @@
 # scanner/detectors.py
 
+import os
 import re
 import math
 import yaml
 import git
 from collections import Counter
+from pathlib import Path
+
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    BarColumn,
+    TaskProgressColumn,
+    MofNCompleteColumn,
+    TimeElapsedColumn,
+)
+
+from scanner.verifier import extract_value
+
+
+def _scan_progress():
+    """Build a Rich Progress instance with a spinner, animated bar, percentage,
+    and item count — shared by scan_repo() and scan_current_state()."""
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+    )
 
 
 # ============================================================
 #  PATTERN LOADING
 # ============================================================
 
-DEFAULT_PATTERNS_PATH = "config/rules-stable.yml"
+# Resolved relative to this file's own location (not the current working directory),
+# so the bundled pattern library is found regardless of where secretscan is run from.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_PATTERNS_PATH = PROJECT_ROOT / "config" / "rules-stable.yml"
 
 
 def load_patterns(filepath=DEFAULT_PATTERNS_PATH, min_confidence="high"):
@@ -79,7 +109,7 @@ def check_line_for_secrets(line, patterns, entropy_threshold=4.0, min_length=15)
         if match and not is_likely_false_positive(line):
             matched_value = match.group(0)
             if matched_value not in already_flagged_values:
-                findings.append(secret_type)
+                findings.append({"finding": secret_type, "method": "regex"})
                 already_flagged_values.add(matched_value)
 
     # --- Entropy check ---
@@ -90,10 +120,35 @@ def check_line_for_secrets(line, patterns, entropy_threshold=4.0, min_length=15)
             continue
         entropy = shannon_entropy(value)
         if entropy > entropy_threshold and len(value) > min_length:
-            findings.append(f"High entropy string (entropy={entropy:.2f})")
+            findings.append({
+                "finding": f"High entropy string (entropy={entropy:.2f})",
+                "method": "entropy",
+            })
             already_flagged_values.add(value)
 
     return findings
+
+
+# ============================================================
+#  CURRENT-STATE (HEAD) CHECK
+# ============================================================
+
+def check_still_present(repo, file_path, matched_value):
+    """Check whether matched_value still appears in file_path's content at HEAD.
+
+    Informational only — returns False (rather than raising) for any
+    lookup failure, including a deleted file or an undecodable/binary blob.
+    """
+    if not file_path or not matched_value:
+        return False
+
+    try:
+        blob = repo.head.commit.tree / file_path
+        content = blob.data_stream.read().decode("utf-8", errors="strict")
+    except Exception:
+        return False
+
+    return matched_value in content
 
 
 # ============================================================
@@ -105,31 +160,95 @@ def scan_repo(repo_path, patterns):
     repo = git.Repo(repo_path)
     findings_report = []
 
-    for commit in repo.iter_commits():
-        if not commit.parents:
-            continue
+    commits = list(repo.iter_commits())
 
-        parent = commit.parents[0]
-        diffs = parent.diff(commit, create_patch=True)
+    with _scan_progress() as progress:
+        task = progress.add_task("Scanning commit history", total=len(commits))
 
-        for diff in diffs:
+        for commit in commits:
+            if commit.parents:
+                parent = commit.parents[0]
+                diffs = parent.diff(commit, create_patch=True)
+
+                for diff in diffs:
+                    try:
+                        patch_text = diff.diff.decode("utf-8", errors="ignore")
+                    except Exception:
+                        continue
+
+                    for line in patch_text.split("\n"):
+                        if line.startswith("+") and not line.startswith("+++"):
+                            added_line = line[1:]
+                            findings = check_line_for_secrets(added_line, patterns)
+
+                            for finding in findings:
+                                result = {
+                                    "finding": finding["finding"],
+                                    "method": finding["method"],
+                                    "commit": commit.hexsha[:8],
+                                    "file": diff.b_path,
+                                    "line": added_line.strip(),
+                                    "source": "history",
+                                }
+                                result["still_present"] = check_still_present(
+                                    repo, result["file"], extract_value(result["line"])
+                                )
+                                findings_report.append(result)
+
+            progress.advance(task)
+
+    return findings_report
+
+
+# ============================================================
+#  CURRENT-STATE (HEAD) WALKING
+# ============================================================
+
+def scan_current_state(repo_path, patterns):
+    """Scan every file in the repo's current working tree (HEAD) for secrets,
+    independent of commit history.
+
+    This closes the gap left by scan_repo(), which walks commit diffs and so
+    never sees a repo's first commit (no parent to diff against) — a secret
+    introduced only there and never touched again would otherwise be invisible.
+    """
+    repo = git.Repo(repo_path)
+    head_commit_sha = repo.head.commit.hexsha[:8]
+    findings_report = []
+
+    file_paths = []
+    for root, dirs, files in os.walk(repo_path):
+        dirs[:] = [d for d in dirs if d != ".git"]
+        for filename in files:
+            file_paths.append(os.path.join(root, filename))
+
+    with _scan_progress() as progress:
+        task = progress.add_task("Scanning current-state files", total=len(file_paths))
+
+        for file_path in file_paths:
+            rel_path = os.path.relpath(file_path, repo_path).replace(os.sep, "/")
+
             try:
-                patch_text = diff.diff.decode("utf-8", errors="ignore")
+                with open(file_path, "r", encoding="utf-8", errors="strict") as f:
+                    content = f.read()
             except Exception:
-                continue
+                content = None
 
-            for line in patch_text.split("\n"):
-                if line.startswith("+") and not line.startswith("+++"):
-                    added_line = line[1:]
-                    findings = check_line_for_secrets(added_line, patterns)
+            if content is not None:
+                for line in content.split("\n"):
+                    findings = check_line_for_secrets(line, patterns)
 
                     for finding in findings:
-                        result = {
-                            "finding": finding,
-                            "commit": commit.hexsha[:8],
-                            "file": diff.b_path,
-                            "line": added_line.strip(),
-                        }
-                        findings_report.append(result)
+                        findings_report.append({
+                            "finding": finding["finding"],
+                            "method": finding["method"],
+                            "commit": head_commit_sha,
+                            "file": rel_path,
+                            "line": line.strip(),
+                            "still_present": True,
+                            "source": "current_state",
+                        })
+
+            progress.advance(task)
 
     return findings_report
