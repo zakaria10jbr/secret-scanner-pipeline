@@ -83,6 +83,17 @@ do about the ones that matter.
   The JSON report is unaffected and always contains everything, so nothing
   is actually lost — this only trims what a human (or a CI log) has to
   re-read on every run.
+- **CI/CD enforcement + GitHub Issue notification** — a scan that only
+  prints to a log nobody reads doesn't actually stop a leaked secret from
+  shipping. `--fail-on <severity>` makes `secretscan` exit nonzero when a
+  finding at or above that severity is detected, so a CI pipeline can
+  actually fail the build instead of showing a green checkmark regardless
+  of what was found. `--notify-github` goes a step further and files a
+  GitHub Issue per new Critical/High finding — metadata only (file,
+  commit, verification status, score, remediation advice), never the
+  actual secret value, since an Issue is typically far more widely visible
+  than the JSON report. Both are opt-in; default behavior (exit 0, no
+  issues filed) is unchanged.
 - **`secretscan` CLI** — installed as a standalone command (see Installation
   below), accepting a local path or a remote Git URL, with flags to skip the
   current-state pass or load a custom pattern file (see Usage below for the
@@ -146,6 +157,17 @@ Use this if you maintain your own regex pattern library instead of (or in
 addition to) the bundled one.
 
 ```bash
+# Show real, unredacted secret values in the terminal output
+secretscan --path /path/to/local/repo --show
+```
+Use this when you specifically need to see a real value — e.g. to confirm
+which credential to rotate. By default, matched values are masked in
+terminal output to prevent accidental exposure in shared screenshots,
+logs, or terminal history. `--show` only affects what's printed to the
+terminal — the JSON report always contains real, unredacted values
+regardless of this flag (see Report Retention below).
+
+```bash
 # Write the JSON report to a specific path instead of the default,
 # auto-generated, timestamped filename under reports/
 secretscan --path /path/to/local/repo --output /path/to/scan-results.json
@@ -192,9 +214,58 @@ again against the same repo. The JSON report is unaffected and always
 contains everything regardless of this flag.
 
 ```bash
+# Exit with a nonzero status if any High-or-above finding is detected
+secretscan --path /path/to/local/repo --fail-on high
+```
+Use this to make `secretscan` an enforcing check in CI/CD — e.g. a GitHub
+Actions job that should actually fail (not just show a green checkmark)
+when a serious secret is found. Exits `1` and prints a `FAIL: N finding(s)
+at or above {threshold} severity detected.` line to stderr if the
+threshold is met, otherwise prints a confirmation and exits `0`. Without
+`--fail-on`, the tool always exits `0` regardless of findings — you have
+to opt in for scan results to affect the exit code. `--fail-on` evaluates
+every current finding, including ones `--baseline` would otherwise
+suppress from the detail tables: a Critical secret still fails the build
+whether or not it's new since the last run.
+
+```bash
+# File a GitHub Issue for each new Critical/High finding
+export GITHUB_TOKEN=ghp_your_personal_access_token
+secretscan --path /path/to/local/repo --baseline --notify-github
+```
+Use this so a serious secret actually notifies someone instead of only
+existing in a JSON report nobody's watching. The token is read from the
+`GITHUB_TOKEN` environment variable only — never pass it as a CLI flag,
+since flag values can leak into shell history or process listings (`ps`,
+task managers, CI job logs that echo the invoking command). The target
+repo defaults to the scanned repo's own `origin` remote if it's hosted on
+GitHub (detected automatically); pass `--github-repo owner/repo`
+explicitly if that detection fails (non-GitHub remotes, `--url` scans
+against a mirror, etc.). Filed issues are metadata-only — file, commit,
+verification status, score, and remediation advice — and never contain
+the actual matched secret value. **Use `--notify-github` together with
+`--baseline`**: without it, every qualifying finding is notified on
+*every* run, since there's no prior-scan state to tell "new" from
+"already known," which means duplicate issues on repeated/scheduled
+scans. If issue creation fails for any reason (bad token, rate limit,
+network error), that finding's failure is printed and the scan continues
+normally — it never crashes the run.
+
+The token can be a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+(classic or fine-grained, with `issues:write` on the target repo) for
+running `secretscan` locally or from a script, or — inside a GitHub
+Actions job — the workflow's automatic `${{ secrets.GITHUB_TOKEN }}`,
+exported as an environment variable to the step (`env: GITHUB_TOKEN:
+${{ secrets.GITHUB_TOKEN }}`), provided the job's permissions grant it
+`issues: write`. Either way, never hardcode a token in the workflow file
+or pass it as a command-line argument.
+
+```bash
 # Flags can be combined
 secretscan --url https://github.com/example/some-repo.git --history-only --severity high --output results.json
 secretscan --path /path/to/local/repo --baseline --severity high
+secretscan --path /path/to/local/repo --baseline --fail-on critical
+secretscan --path /path/to/local/repo --baseline --notify-github --fail-on high
 ```
 
 `--path` and `--url` are mutually exclusive and one is required. Run
@@ -248,13 +319,15 @@ secret-scanner-pipeline/
 │   ├── scoring.py             #   criticality scoring and severity thresholds
 │   ├── remediation.py         #   remediation templates, severity routing, JSON report generation
 │   ├── remote.py              #   clone-scan-cleanup flow for --url targets
-│   └── baseline.py            #   finding fingerprinting and baseline diff/save for --baseline
+│   ├── baseline.py            #   finding fingerprinting and baseline diff/save for --baseline
+│   └── notify.py              #   GitHub Issue creation for --notify-github, GitHub repo detection
 ├── scripts/
 │   └── check_github_coverage.py  # dev utility: audits pattern coverage against GitHub's recognized providers
 ├── tests/                     # pytest suite
 │   ├── test_scoring.py
 │   ├── test_remediation.py
-│   └── test_baseline.py
+│   ├── test_baseline.py
+│   └── test_notify.py
 ├── reports/                   # timestamped JSON scan reports (gitignored; see Report Retention below)
 ├── baselines/                 # per-repo finding-ID snapshots for --baseline (gitignored)
 ├── main.py                    # CLI entry point (argparse) and scan orchestration
@@ -285,18 +358,25 @@ delete it afterward rather than leaving it lying around.
 python -m pytest tests/ -v
 ```
 
-45 tests currently pass, covering the scoring engine (`test_scoring.py` —
+84 tests currently pass, covering the scoring engine (`test_scoring.py` —
 type/verification weight combinations, severity thresholds, the file-path
 penalty and its zero-floor), the remediation stage (`test_remediation.py`
 — severity-to-action routing, template category matching, JSON report
 structure, the default timestamped filename, and report retention/cleanup),
-the CLI's severity-filtering logic (`test_main.py`), and baseline diffing
-(`test_baseline.py` — finding-ID stability/uniqueness across type, file,
-commit, and value, the separate AWS-pair hashing, and new-vs-previously-seen
-diffing). These tests exercise scoring, remediation, CLI-filtering, and
-baseline logic directly; detection and live-verification behavior are
-validated by running the tool against real repositories rather than by unit
-test.
+the CLI's severity-filtering and `--fail-on` logic (`test_main.py`),
+baseline diffing (`test_baseline.py` — finding-ID stability/uniqueness
+across type, file, commit, and value, the separate AWS-pair hashing, and
+new-vs-previously-seen diffing), deterministic AWS candidate pairing
+(`test_verifier.py`), current-state directory exclusion (`test_detectors.py`
+— `.git`/`__pycache__`/`.pytest_cache`/`*.egg-info`/`node_modules` pruning),
+and GitHub Issue notification (`test_notify.py` — issue title/body
+construction, confirming the matched secret value is never included in an
+issue body, GitHub-slug URL parsing, and graceful failure handling on auth
+errors, rate limits, and network errors, all network-mocked). These tests
+exercise scoring, remediation, CLI, baseline, verifier, detector, and
+notification logic directly; detection and live-verification behavior
+against real provider APIs are validated by running the tool against real
+repositories rather than by unit test.
 
 ## Known Limitations
 

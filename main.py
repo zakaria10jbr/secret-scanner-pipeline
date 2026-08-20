@@ -1,4 +1,6 @@
 import argparse
+import os
+import sys
 
 from rich import box
 from rich.console import Console
@@ -14,6 +16,7 @@ from scanner.scoring import score_finding
 from scanner.remediation import route_remediation, generate_report
 from scanner.redact import redact_value
 from scanner.baseline import compute_finding_id, load_baseline, save_baseline, diff_against_baseline
+from scanner.notify import create_github_issue, detect_github_repo
 
 console = Console()
 
@@ -46,76 +49,86 @@ def build_arg_parser():
     source_group = parser.add_mutually_exclusive_group(required=True)
     source_group.add_argument(
         "--url",
-        help="HTTPS URL of a remote Git repository to scan (it will be cloned temporarily).",
+        help="Clone and scan a remote repository (temporary clone, auto-cleaned up).",
     )
     source_group.add_argument(
         "--path",
-        help="Path to a local Git repository to scan.",
+        help="Scan a local Git repository.",
     )
 
     parser.add_argument(
         "--patterns",
         default=None,
-        help="Path to a custom pattern YAML file (defaults to config/rules-stable.yml).",
+        help="Use a custom pattern YAML file instead of the bundled library.",
     )
     parser.add_argument(
         "--history-only",
         action="store_true",
         default=False,
-        help="Skip the current-state scan and only walk commit diffs (faster, but "
-             "misses secrets only present in the repository's first commit).",
+        help="Skip current-state scanning; walk commit diffs only (faster, but "
+             "misses secrets only in the first commit).",
     )
     parser.add_argument(
         "--show",
         action="store_true",
         default=False,
-        help="Show full, unredacted secret values in output. By default, matched "
-             "values are masked to prevent accidental exposure in terminal history, "
-             "shared screenshots, or logs. Only use this if you specifically need to "
-             "see the real value, e.g. to confirm which credential to rotate.",
+        help="Display real secret values instead of masked ones (default: masked).",
     )
     parser.add_argument(
         "--output",
         type=str,
         default=None,
         metavar="PATH",
-        help="Write the JSON report to this exact path instead of the default "
-             "auto-generated, timestamped filename under reports/. An explicit "
-             "--output path is never subject to the 10-file retention cleanup "
-             "that applies to auto-generated reports.",
+        help="Save the JSON report to this exact path, exempt from the "
+             "10-file retention cleanup.",
     )
     parser.add_argument(
         "--summary",
         action="store_true",
         default=False,
-        help="Show only the summary block, not the detailed per-severity finding "
-             "tables. Useful for a quick headline check (totals, severity/"
-             "verification breakdown) without scrolling past full detail tables. "
-             "The JSON report is still written in full either way.",
+        help="Show only the summary block, skip detailed per-severity finding tables.",
     )
     parser.add_argument(
         "--severity",
         choices=["critical", "high", "medium", "low"],
         default=None,
-        help="Only show detailed finding tables for this severity level and "
-             "above (e.g. --severity high shows High and Critical only). The "
-             "summary block still reports the true breakdown across all "
-             "severities either way — this only limits the detail tables. "
-             "The JSON report is unaffected and always contains everything.",
+        help="Only show detail tables for this severity level and above.",
     )
     parser.add_argument(
         "--baseline",
         action="store_true",
         default=False,
-        help="Compare this scan against the last --baseline scan of the same "
-             "repo and only show full detail for findings that are new since "
-             "then; findings seen before are counted but not repeated in the "
-             "detail tables. Intended for repeated/automated scanning (CI/CD, "
-             "scheduled scans), where re-printing every already-known finding "
-             "on every run buries what actually changed. Has no effect on the "
-             "JSON report, which always contains everything. After the scan, "
-             "the current full set of findings is saved as the new baseline "
-             "for next time.",
+        help="Compare against the previous scan of this repo; show only "
+             "newly-introduced findings.",
+    )
+    parser.add_argument(
+        "--fail-on",
+        choices=["critical", "high", "medium", "low"],
+        default=None,
+        help="Exit with a nonzero status code if any finding at or above "
+             "this severity is detected. Default: always exit 0 regardless "
+             "of findings. Use this to make CI/CD pipelines fail on "
+             "serious secrets.",
+    )
+    parser.add_argument(
+        "--notify-github",
+        action="store_true",
+        default=False,
+        help="Create a GitHub Issue for each new Critical/High finding. "
+             "Requires a GITHUB_TOKEN environment variable — never pass a "
+             "token via a CLI flag, since that can leak into shell history "
+             "or process lists. Issues are metadata-only and never "
+             "contain the actual secret value.",
+    )
+    parser.add_argument(
+        "--github-repo",
+        type=str,
+        default=None,
+        metavar="OWNER/REPO",
+        help="GitHub repo to create issues on, as 'owner/repo'. If "
+             "omitted, secretscan tries to detect it from the scanned "
+             "repo's own GitHub URL/remote; required explicitly if that "
+             "detection fails (e.g. a non-GitHub remote).",
     )
 
     return parser
@@ -141,6 +154,21 @@ def severities_at_or_above(threshold):
         return list(SEVERITY_ORDER)
     cutoff = SEVERITY_ORDER.index(normalized)
     return SEVERITY_ORDER[: cutoff + 1]
+
+
+def count_findings_at_or_above(scored_results, aws_pairs, threshold):
+    """Count findings and AWS pairs whose severity is at or above `threshold`,
+    using the same Critical > High > Medium > Low ordering as --severity.
+
+    Used by --fail-on, and deliberately checks the FULL current scan rather
+    than only the new-since-baseline subset --baseline filters detail
+    tables to: a Critical secret is still Critical whether or not it's new
+    since the last run, so a CI gate shouldn't treat a still-present
+    Critical finding as passing just because it was already known."""
+    qualifying_severities = set(severities_at_or_above(threshold))
+    count = sum(1 for r in scored_results if r["severity"] in qualifying_severities)
+    count += sum(1 for p in aws_pairs if p["severity"] in qualifying_severities)
+    return count
 
 
 def dedupe_current_state_results(results):
@@ -562,6 +590,69 @@ def main():
     if args.baseline:
         baseline_path = save_baseline(repo_label, current_finding_ids)
         console.print(f"[dim]Baseline updated:[/dim] {baseline_path}")
+
+    if args.notify_github:
+        github_repo = args.github_repo or detect_github_repo(args)
+        if not github_repo:
+            console.print(
+                "[yellow]--notify-github:[/yellow] could not determine the "
+                "GitHub repo to notify (no --github-repo given and none "
+                "could be detected from the scanned repo's remote) — "
+                "skipping."
+            )
+        else:
+            github_token = os.environ.get("GITHUB_TOKEN")
+            if not github_token:
+                console.print(
+                    "[yellow]--notify-github:[/yellow] GITHUB_TOKEN "
+                    "environment variable is not set — skipping."
+                )
+            else:
+                repo_owner, repo_name = github_repo.split("/", 1)
+
+                notify_candidates = [r for r in scored_results if r["severity"] in ("Critical", "High")]
+                notify_candidates += [p for p in aws_pairs if p["severity"] in ("Critical", "High")]
+
+                if args.baseline:
+                    # Only notify for genuinely new findings, so a repeated/
+                    # scheduled scan doesn't re-file an issue for a secret
+                    # that's already been reported and is simply still
+                    # present. Without --baseline there's no prior-scan
+                    # state to compare against, so every qualifying finding
+                    # is notified on every run — running --notify-github
+                    # without --baseline WILL create duplicate issues
+                    # across repeated runs; that tradeoff is accepted here
+                    # rather than silently skipping notification when no
+                    # baseline is available.
+                    notify_candidates = [
+                        f for f in notify_candidates if compute_finding_id(f) in new_finding_ids
+                    ]
+
+                for finding in notify_candidates:
+                    issue_url = create_github_issue(finding, repo_owner, repo_name, github_token)
+                    if issue_url:
+                        console.print(f"[green]GitHub issue created:[/green] {issue_url}")
+                    else:
+                        console.print(
+                            f"[yellow]Failed to create GitHub issue for "
+                            f"{finding.get('finding', 'finding')} in "
+                            f"{finding.get('file', 'unknown')} — "
+                            f"continuing.[/yellow]"
+                        )
+
+    if args.fail_on:
+        qualifying_count = count_findings_at_or_above(scored_results, aws_pairs, args.fail_on)
+        if qualifying_count > 0:
+            print(
+                f"FAIL: {qualifying_count} finding(s) at or above "
+                f"{args.fail_on} severity detected.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        else:
+            console.print(
+                f"[dim]No findings at or above {args.fail_on.title()} severity.[/dim]"
+            )
 
 
 if __name__ == "__main__":
