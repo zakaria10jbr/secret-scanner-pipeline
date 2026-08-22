@@ -67,8 +67,8 @@ do about the ones that matter.
   GitHub, Slack, Stripe, or a generic fallback) with concrete rotation steps
   and a link to the provider's own docs; Medium findings are
   `logged_for_digest`; Low findings are `logged_only`. Every run also writes
-  a complete JSON report to `reports/findings.json` for other tooling to
-  consume.
+  a complete JSON report to a timestamped `reports/findings_YYYY-MM-DD_HHMMSS.json`
+  file for other tooling to consume.
 - **Baseline / incremental scanning** — a one-off manual scan benefits from
   seeing every finding every time, but a scanner wired into CI/CD (a daily
   scheduled job, or a check on every push) does not: without a way to
@@ -300,7 +300,7 @@ Scanning commit history  ██████████████████�
 │ Asymmetric Private Key  │ BARE-SECRETS (1fd84a)│ UNVERIFIABLE  │  50   │ alert_and_advise   │   Yes   │
 └────────────────────────┴──────────────────────┴───────────────┴───────┴───────────────────┴─────────┘
 
-Report written to: reports/findings.json
+Report written to: reports/findings_2026-08-22_143012.json
 ```
 
 (The real output additionally shows a `Value` column with the matched
@@ -313,6 +313,7 @@ condensed here for readability.)
 secret-scanner-pipeline/
 ├── config/
 │   └── rules-stable.yml       # regex pattern library (883 high-confidence patterns)
+├── docs/                      # project's internship report
 ├── scanner/                   # core package
 │   ├── detectors.py           #   pattern loading, regex/entropy detection, git history + current-state walking
 │   ├── verifier.py            #   live credential verification against provider APIs
@@ -320,14 +321,18 @@ secret-scanner-pipeline/
 │   ├── remediation.py         #   remediation templates, severity routing, JSON report generation
 │   ├── remote.py              #   clone-scan-cleanup flow for --url targets
 │   ├── baseline.py            #   finding fingerprinting and baseline diff/save for --baseline
-│   └── notify.py              #   GitHub Issue creation for --notify-github, GitHub repo detection
+│   ├── notify.py              #   GitHub Issue creation for --notify-github, GitHub repo detection
+│   └── redact.py              #   display-only secret masking (redact_value)
 ├── scripts/
 │   └── check_github_coverage.py  # dev utility: audits pattern coverage against GitHub's recognized providers
 ├── tests/                     # pytest suite
 │   ├── test_scoring.py
 │   ├── test_remediation.py
 │   ├── test_baseline.py
-│   └── test_notify.py
+│   ├── test_notify.py
+│   ├── test_detectors.py
+│   ├── test_main.py
+│   └── test_verifier.py
 ├── reports/                   # timestamped JSON scan reports (gitignored; see Report Retention below)
 ├── baselines/                 # per-repo finding-ID snapshots for --baseline (gitignored)
 ├── main.py                    # CLI entry point (argparse) and scan orchestration
