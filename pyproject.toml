@@ -11,10 +11,8 @@ requires-python = ">=3.9"
 dependencies = [
     "gitpython",
     "requests",
-    "python-dotenv",
     "pyyaml",
     "boto3",
-    "colorama",
     "rich",
 ]
 

@@ -44,6 +44,7 @@ do about the ones that matter.
   - **Mailchimp** — via its datacenter-scoped `/ping` endpoint
   - **Google** — API keys, via the Discovery Service
   - **Discord** — bot tokens (`/users/@me`) and webhooks (direct request) separately
+  - **Shopify** (detected, but explicitly non-verifiable — see below)
 
   **Shopify** is a deliberate exception: its API is scoped per-shop and
   requires a shop domain (e.g. `my-shop.myshopify.com`) that detection never
@@ -313,7 +314,6 @@ condensed here for readability.)
 secret-scanner-pipeline/
 ├── config/
 │   └── rules-stable.yml       # regex pattern library (883 high-confidence patterns)
-├── docs/                      # project's internship report
 ├── scanner/                   # core package
 │   ├── detectors.py           #   pattern loading, regex/entropy detection, git history + current-state walking
 │   ├── verifier.py            #   live credential verification against provider APIs
